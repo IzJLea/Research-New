@@ -1,0 +1,40 @@
+
+
+Channels in reactor       480
+Channels/pass             120               Gas     52.63
+
+        SECTION         VOLUME [m^3]Ref FlowRef DenRef FlPressuEnthalpy  DP    Kresist   Reff    FLOW
+                        Pass Vol/pas(Av of 120)                         [kPa]                     28      25      19
+SG Outlet to Pump Suctio4.18 0.0348  0.2221 780.6002667.5 9800  1133.8   121.01.7005E-00.013274
+Pump suction Nozzle     0.14 0.0012         780.6002667.5 9679  1133.8    1731
+Pump discharge          1.75 0.0146         780.6002667.511410  1135.9      30
+
+Reactor Inlet Header    1.41 0.0118                2667.511380  1135.8    1380                 0.8490301.0650241.843878
+Inlet feeders           4.25 0.0354 0.003610 780.6 25.80011380  1135.8     165 0.2479   193.5   164.3   206.1   356.8
+Inlet Endfitting        3.78 0.0315 0.006229 780.6 25.80011215  1135.7   262.5 0.3944   307.8   261.4   327.9   567.6
+Fuel channels           2.43 0.0203 0.003490 780.6 25.80010690  1236.8   520.5 0.7820  610.3935 518.2   650.1   1125.5
+Outlet Endfitting       3.79 0.0316 0.006290 780.6 25.80010174  1350.1     258 0.3876   302.6   256.9   322.2   557.9
+Outlet feeders          7.82 0.0651 0.003937 780.6 25.80010000  1349.8     174 0.2614   204.1   173.2   217.3   376.2
+Reactor Outlet Header   1.81 0.0151                2667.510000  1349.8    1380 2.0732   1618.3 1374.0151723.5642984.011
+RIH to ROH                                                                    1.9394E-0 20467.9 20467.9 20467.9 20467.9
+ROH to SG Inlet Piping  2.23 0.0186  0.3754 780.6002667.59939.5 1347.2    60.58.5025E-00.006637
+SG Inlet head           2.12 0.0177  0.6774 780.6002667.59939.5 1344.2   139.51.9605E-00.015304
+SG U-tubes - lower regio2.44 0.0203  0.6774 780.6002667.5 9900  1344.2
+SG U-tubes - upper regio9.19 0.0766  0.6774 780.6002667.5 9879  1235.2
+SG Preheater section    2.17 0.0181  0.6774 780.6002667.5 9859  1133.9
+SG Outlet head          2.40 0.0200  0.6774 780.6002667.5 9800  1133.9
+ROH to SG Outlet                            780.6002667.5                  2002.8107E-00.0219407
+                                                                          1731     1731
+Core Power               2651MW                                                   1.894       1
+Average channel power    5.52MW                                Flow            5052.245  2667.5
+Time Averaged max channe 6.26MW                                        Pump
+Max allowed channel powe 6.80MW                                        a0          2400    2400
+Enthalpy rise across cor214.4kJ/kg                                     a1     -9.402E-0-9.402E-05
+                                            0.003425                   dp(1.8*      0.1  1731.0
+Channel Flows - high pow   27kg/s
+Channel Flows - low powe   19kg/s
+Channel Flows - core the 25.8kg/s
+
+Channel flow Area       0.003m^2
+Average Mass Flux       7381.kg/m^2/s
+Hydraulic Diameter      0.007m
