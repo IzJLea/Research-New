@@ -36,7 +36,7 @@ hin=hres;      % enthalpy of entering fluid
 %% Retrieving H2O physical data (for interpolation)
 
 % Temperature Data
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','A32:A52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','A32:A52');
 
 WaterSaturationPropertiesTemperatureTable2 = reshape([raw{:}],size(raw));
 
@@ -46,7 +46,7 @@ Th2o=WaterSaturationPropertiesTemperatureTable2;
 
 %Saturation Pressure
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','B32:B52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','B32:B52');
 
 WaterSaturationPropertiesTemperatureTable8 = reshape([raw{:}],size(raw));
 
@@ -56,7 +56,7 @@ Ph2o=WaterSaturationPropertiesTemperatureTable8.*1000;
 
 %liquid specific volume
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','C32:C52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','C32:C52');
 
 WaterSaturationPropertiesTemperatureTable3 = reshape([raw{:}],size(raw));
 
@@ -66,7 +66,7 @@ vsf=WaterSaturationPropertiesTemperatureTable3;
 
 %gaseous specific volume
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','D32:D52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','D32:D52');
 
 WaterSaturationPropertiesTemperatureTable4 = reshape([raw{:}],size(raw));
 
@@ -76,7 +76,7 @@ vsg=WaterSaturationPropertiesTemperatureTable4;
 
 %fluid enthalpy
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','G32:G52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','G32:G52');
 
 WaterSaturationPropertiesTemperatureTable5 = reshape([raw{:}],size(raw));
 
@@ -86,7 +86,7 @@ hf=WaterSaturationPropertiesTemperatureTable5;
 
 %latent heat
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','H32:H52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','H32:H52');
 
 WaterSaturationPropertiesTemperatureTable6 = reshape([raw{:}],size(raw));
 
@@ -96,7 +96,7 @@ hfg=WaterSaturationPropertiesTemperatureTable6;
 
 %gaseous enthalpy
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\H2O_TempSat.xls','Sheet1','I32:I52');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\H2O_TempSat.xls','Sheet1','I32:I52');
 
 WaterSaturationPropertiesTemperatureTable7 = reshape([raw{:}],size(raw));
 
@@ -142,7 +142,7 @@ hout=(Qchannel*1000/Minput)+hin;
 %% Initial single pass k calculation- 
 % pressure differences in each pass section
 %
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\Generic C9 HTS Data.xlsx','FLOW-DP','I13:I17');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\Generic C9 HTS Data.xlsx','FLOW-DP','I13:I17');
 
 
 DP = reshape([raw{:}],size(raw));
@@ -182,13 +182,13 @@ xprime=x-(xd*exp((x/xd)-1));
 
 %surface tension data
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\Surface Tension 190-374 C.xlsx','Sheet1','A2:A39');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\Surface Tension 190-374 C.xlsx','Sheet1','A2:A39');
 
 Tsig = reshape([raw{:}],size(raw));
 
 clearvars raw;
 
-[~, ~, raw] = xlsread('C:\Users\Izaak\Documents\Research\Surface Tension 190-374 C.xlsx','Sheet1','B2:B39');
+[~, ~, raw] = xlsread('C:\Users\Izaak-PC\Documents\Research\Surface Tension 190-374 C.xlsx','Sheet1','B2:B39');
 
 sigval = reshape([raw{:}],size(raw));
 
