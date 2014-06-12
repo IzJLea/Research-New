@@ -2,9 +2,13 @@
 
 Qchannel=5.52; %MW
 
+Qchannelimp=Qchannel*1000*3412.14; %Btu/h
+
 Tin=267.2; %C
 
-Dh=0.0074; %m^2
+Achannel=0.0034;%m^2
+
+Achannelimp=Achannel*3.2808^2; %ft^2
 
 %% Initial single pass k calculation- 
 % pressure differences in each pass section
@@ -27,13 +31,15 @@ M=25.8; % kg/s
 
 Rho=780.6; %kg/m^3
 
-keff=DP/(M^2);
+keff=DP./1000./(M^2);
 
-reff=keff*Rho;
+reff=keff.*Rho;
 
-Pout=10000; %kPa
+reffT=sum(reff);
 
-Pin=Pout-sum(DP);
+Pout=8.3; %MPa
+
+Pin=((Pout*1000)-sum(DP))/1000;  %MPa
 
 
 %% Physical data import
@@ -334,7 +340,7 @@ Tsurf=[190
 
 Tsurf=reshape(Tsurf,38,1);
 
-% Surface tension
+% Surface tension mN/m
 
 sigma=[39.9500
 38.8300
@@ -400,118 +406,180 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 %% System Properties
 % Compressed water enthalpy 
 
-hin=Lagint(Pcomp,hcomp,Pin);
+hin=LinLook(Pcomp,hcomp,Pin); %kJ/kg
+
+% Compressed water enthalpy imperial 
+
+hinimp=hin*0.94782/2.2046; %Btu/lb
 
 % saturation temperature 
 
-Tsys=Lagint(Psat,Tsat,Pout);
+Tsys=LinLook(Psat,Tsat,Pout); %C
+
+% saturation temp imperial
+
+TsysimpF=(Tsys*1.8)+32;  %Fahrenheit
+
+TsysimpR=TsysimpF+459.67; %Rankine
 
 % saturation liquid enthalpy
 
-hfsys=Lagint(Psat,hf,Pout);
+hfsys=LinLook(Psat,hf,Pout); %kJ/kg
+
+% saturation liquid enthalpy imperial
+
+hfsysimp=hfsys*0.94782/2.2046; %Btu/lb
 
 % saturation vapour enthalpy
 
-hvsys=Lagint(Psat,hv,Pout);
+hvsys=LinLook(Psat,hv,Pout); %kJ/kg
+
+% saturation vapour enthalpy imperial
+
+hvsysimp=hvsys*0.94782/2.2046; %Btu/lb
 
 % saturation latent heat
 
-hfvsys=Lagint(Psat,hfv,Pout);
+hfvsys=LinLook(Psat,hfv,Pout); %kJ/kg
+
+% saturation latent heat imperial
+
+hfvsysimp=hfvsys*0.94782/2.2046; %Btu/lb
 
 % saturation liquid density
 
-rhofsys=Lagint(Psat,rhof,Pout);
+rhofsys=LinLook(Psat,rhof,Pout);  %kg/m^3
+
+% saturation liquid density imperial
+
+rhofsysimp=rhofsys*2.2046/3.2808^3; %lb/ft^3
 
 % saturation gas density
 
-rhovsys=Lagint(Psat,rhov,Pout);
+rhovsys=LinLook(Psat,rhov,Pout); %kg/m^3
+
+%saturation gas density imperial
+
+rhovsysimp=rhovsys*2.2046/3.2808^3; %lb/ft^3
 
 % Cp Liquid
 
-Cpl=Lagint(TCp,Cp,Tsys);
+Cpl=LinLook(TCp,Cp,Tsys); %kJ/kg.K
+
+% Cp liquid imperial
+
+Cplimp=Cpl*0.97482/2.2046*1.8; %Btu/lb.R
 
 % Thermal Conductivity
 
-ksys=Lagint(TCp,kl,Tsys);
+ksys=LinLook(TCp,kl,Tsys); %W/m.K
+
+% Thermal Conductivity imperial
+
+ksysimp=ksys*3.41214/3.2808*1.8; %Btu/ft.R
 
 % Dynamic Viscosity
 
-mulsys=Lagint(TCp,mul,Tsys);
+mulsys=LinLook(TCp,mul,Tsys); %kg/m.s
+
+% Dynamic Viscosity imperial
+
+mulsysimp=mulsys*2.2046/3.2808*3600; %lb/ft.h
 
 % Prandtl Number
 
-Prlsys=Lagint(TCp,Prl,Tsys);
+Prlsys=LinLook(TCp,Prl,Tsys); 
 
 % hout calculation
 
-hout=hin+(Qchannel./M);
+hout=hin+(Qchannel.*1000./M); %kJ/kg
 
-%% Two phase property calculation (use Levy from previous version to get averaged properties. If single phase )
+% hout imperial
 
+houtimp=hout*0.94782/2.2046; %Btu/lb
 
-%% Conversions  MAKE THIS A PART OF A SEPARATE LEVY ALPHA CALCULATION FUNCTION.
-%liquid density
+% Hydraulic Diameter
 
-rhofsys=rhofsys/0.45329/3.2808^3; %lb/ft^3
+Dh=0.0074; %m
 
-%gaseous density
+% Hydraulic Diameter imperial
 
-rhogsys=rhogsys/0.45329/3.2808^3; %lb/ft^3
+Dhimp=Dh*3.2808; % ft
 
-%surface tension
+% Heat transfer area
 
-sigma=sigma/0.22481*3.2808;
+Aht=9.1224; %m^2
 
-% Hydraulic diameter
+% Heat transfer area imperial
 
-Dh=Dh/3.2808; %ft
+Ahtimp=Aht*3.2808^2;
 
-% dynamic viscosity
+% saturation surface tension
 
-mulsys=mulsys/0.45329/3.2808;
+sigmasys=LinLook(Tsurf,sigma,Tsys); %mN/m
 
-% thermal conductivity
+%saturation surface tension imperial
 
-ksys=ksys*3.4121/3.2808/1.8;
+sigmasysimp=sigmasys/1000*0.22481/3.2808; %lb/ft
 
-%gravitational acceleration (ft/hr^2)
+% lb force to lbmass conversion
 
-accimp=9.80665*0.22481/(3600^2);
+gc=1/32.174; %s^2/ft
 
-%Mass flux (lb/h-ft^2)
+% imperial gravitational constant
 
-G=G*0.22481*32.174/5.32/3600/(3.2808^2);
-
-%lbf to lbm conversion
-
-gc=32.174/5.32;
+g=32.174*3600^2; %ft/h^2
 
 
+%% Single Phase mass flow calculation
+
+Mchannel=sqrt((Pout-Pin)*rhofsys/reffT);
+
+
+
+
+%% Alpha calculation 
+
+% delta T departure calculation
+
+Ybplus=0.0015*sqrt(sigmasysimp*gc*Dhimp*rhofsysimp)/mulsysimp;
+
+G=Mchannel/Dhimp*2.2046*3600;
+
+f=0.0055*(1+(((20000*10^-4)+(10^6/(G*Dhimp/mulsysimp)))^(1/3)));
+
+tauw=f*G^2/(8*rhofsysimp*gc);
+
+h=0.023*ksysimp/Dhimp*((G*Dhimp/mulsysimp)^0.8)*(Prlsys^0.4);
+
+Qlevy=(Qchannelimp/Achannelimp)/(rhofsysimp*Cplimp*sqrt(tauw*gc/rhofsysimp));
+
+if Ybplus>=0&&Ybplus<5
+    Td=(Qchannelimp/Achannelimp/h)-(Qlevy*Prlsys*Ybplus);
+else 
+    if Ybplus>=5&&Ybplus<30
+        Td=(Qchannelimp/Achannelimp/h)-(5*Qlevy*ln(1+(Prlsys*((Ybplus/5)-1))));
+    else
+        if Ybplus>=30
+            Td=(Qchannelimp/Achannelimp/h)-(5*Qlevy*(1+ln(1+(5*Prlsys))+(0.5*ln(Ybplus/30))));
+        end
+    end
+end
+display(Ybplus,'Ybplus: ')
+
+display(Td,'Td: ');
+
+
+%% Single phase mass flow calculation
+
+if hout>hfsys
+    display('Two Phase Flow')
+end
+
+    
+display(Mchannel,'Mass Flow Rate (kg/s): ');
 
 
     
-    
-
-
-%% Single Phase Flow (re-do to calculate flowrate with given temperature of coolant DP will be constant. Use averaged properties if two phase)
-
-Mchannel=sqrt(sum(DP)*rhosys/reff);
-
-
-
-
-
-DPm=keff.*Minput.^2;
-
-DPd=DPm*Rho./rhofsys;
-
-DPt=sum(DPd);
-
-display(DPd, 'Pressure drop per section');
-
-display(DPt, 'Total single phase Pressure drop:');
-
-
-
 
 
