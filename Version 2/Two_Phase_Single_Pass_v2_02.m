@@ -516,11 +516,11 @@ Ahtimp=Aht*3.2808^2;
 
 % saturation surface tension
 
-sigmasys=LinLook(Tsurf,sigma,Tsys); %mN/m
+sigmasys=LinLook(Tsurf,sigma,Tsys); %N/m
 
 %saturation surface tension imperial
 
-sigmasysimp=sigmasys/1000*0.22481/3.2808; %lb/ft
+sigmasysimp=sigmasys*0.22481/3.2808; %lb/ft
 
 % lb force to lbmass conversion
 
@@ -542,11 +542,11 @@ Mchannel=sqrt((Pout-Pin)*rhofsys/reffT);
 
 % delta T departure calculation
 
-Ybplus=0.0015*sqrt(sigmasysimp*gc*Dhimp*rhofsysimp)/mulsysimp;
+Ybplus=0.015*sqrt(sigmasysimp*gc*Dhimp*rhofsysimp)/mulsysimp;
 
 G=Mchannel/Dhimp*2.2046*3600;
 
-f=0.0055*(1+(((20000*10^-4)+(10^6/(G*Dhimp/mulsysimp)))^(1/3)));
+f=0.0055*(1+(((20000*5e-6/Dhimp)+(10^6/(G*Dhimp/mulsysimp)))^(1/3)));
 
 tauw=f*G^2/(8*rhofsysimp*gc);
 
