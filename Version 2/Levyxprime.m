@@ -1,4 +1,4 @@
-function Mchannel = LevyCandu(Psat,hout,Qchannel,Msp)
+function xprime = Levyxprime(Psat,hout,Qchannel,Msp)
 
 %System values
 
@@ -215,35 +215,35 @@ tauw=f*G^2/(8*rholsys*gc);
 
 % heat transfer coefficient
 
-h=0.023.*klsys./Dhimp*((G*Dhimp/mulsys)^0.8)*(Prlsys^0.4);
+h=0.023*klsys/Dhimp*((G*Dhimp/mulsys)^0.8)*(Prlsys^0.4);
 
 
 
 % heat flux
 
-Qf=Qchannelimp./Ahtimp;
+Qf=Qchannelimp/Ahtimp;
 
 % Dimensionless heat flux 
 
-Qlevy=Qf./(rholsys.*Cpsys.*sqrt(tauw.*gc./rholsys));
+Qlevy=Qf/(rholsys*Cpsys*sqrt(tauw*gc/rholsys));
 
 % Ybplus calculation
 
-Ybplus=0.015.*sqrt(sigmasys.*gc.*Dhimp.*rholsys)./mulsys;
+Ybplus=0.015*sqrt(sigmasys*gc*Dhimp*rholsys)/mulsys;
 
 % Td calculation
 
 if Ybplus>=0&&Ybplus<5
     
-    Td=(Qf./h)-(Qlevy.*Prlsys.*Ybplus);
+    Td=(Qf/h)-(Qlevy*Prlsys*Ybplus);
     
 else if Ybplus>=5&&Ybplus<30;
         
-        Td=(Qf./h)-(5.*Qlevy.*(Prlsys+log(1+(Prlsys.*((Ybplus./5)-1)))));
+        Td=(Qf/h)-(5*Qlevy*(Prlsys+log(1+(Prlsys*((Ybplus/5)-1)))));
         
     else if Ybplus>=30
             
-            Td=(Qf./h)-(5.*Qlevy.*(Prlsys+log(1+(5.*Prlsys))+(0.5.*log(Ybplus./30))));
+            Td=(Qf/h)-(5*Qlevy*(Prlsys+log(1+(5*Prlsys))+(0.5*log(Ybplus./30))));
             
         end
     end
@@ -251,17 +251,10 @@ end
 
 % mass fraction calculation
 
-x=(houtimp-hlsys)./(hvsys-hlsys);
+x=(houtimp-hlsys)/(hvsys-hlsys);
 
 % x prime calculation
 
-xd=-Cpsys.*Td./(hvsys-hlsys);
+xd=-Cpsys*Td/(hvsys-hlsys);
 
-xprime=x-(xd.*exp((x./xd)-1));
-
-alpha=xprime./rhogsys./((1.13.*((xprime./rhogsys)+((1-xprime)./rholsys))+(1.18./G.*((sigmasys.*g.*gc.*(rholsys-rhogsys)./rholsys.^2).^(1./4)))));
-
-
-
-
-
+xprime=x-(xd*exp((x/xd)-1));
