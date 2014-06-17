@@ -1,6 +1,6 @@
 %%Inputs and property calculation 
 
-Qchannel=4:0.01:12; %MW
+Qchannel=5.5:0.1:12; %MW
 
 Qchannelimp=Qchannel*1000*3412.14; %Btu/h
 
@@ -37,7 +37,7 @@ reff=keff.*Rho;
 
 reffT=sum(reff);
 
-Pout=8.3; %MPa
+Pout=10; %MPa
 
 Pin=((Pout*1000)-sum(DP))/1000;  %MPa
 
@@ -417,7 +417,7 @@ Dh=0.0074; %m
 
 Aht=9.1224; %m^2
 
-%% Single Phase mass flow calculation
+%% Mass flow calculation
 
 x=(hout-hfsys)./(hvsys-hfsys);
 
@@ -431,24 +431,17 @@ for in=1:n
     Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT);
     else
     
-    Mchannelf=sqrt((Pout-Pin)*rhofsys/reffT);
+    LF=((1-x(in))^1.75)/((1-x(in))^2);
     
-    Qrun=Qchannel(in);
+    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT/LF);
     
-    alpha=LevyCandu(Pout,hout,Qrun,Mchannelf);
+    clear LF
     
-    rhosys=(alpha*rhofsys)+((1-alpha)*rhovsys);
-    
-    Mchannel(in)=sqrt((Pout-Pin)*rhosys/reffT);
-    
-    clear alpha
-    clear rhosys
     end
 end
 
-plot(Qchannel,Mchannel)
+plot(Qchannel,Mchannel);
 
 
-    
 
 

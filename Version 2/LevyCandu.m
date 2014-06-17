@@ -1,10 +1,10 @@
-function Mchannel = LevyCandu(Psat,hout,Qchannel,Msp)
+function alpha = LevyCandu(Psat,hout,Qchannel,Msp)
 
 %System values
 
-Achannel=0.0034; %m^2
+AchLevy=0.0034; %m^2
 
-Achannelimp=Achannel*3.2808^2; %ft^2
+AchLevyimp=AchLevy*3.2808^2; %ft^2
 
 Aht=9.1224; %m^2 heat transfer area
 
@@ -201,7 +201,7 @@ Prlsys=LinLook(Pimp,Prlimp,Psatimp);
 %% Td calculation
 % mass flux
 
-G=Mspimp/Achannelimp;
+G=Mspimp/AchLevyimp;
 
 
 % friction factor
