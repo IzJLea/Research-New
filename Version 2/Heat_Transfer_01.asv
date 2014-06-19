@@ -98,10 +98,9 @@ for diff>1
     diff=Tc-Tprev;
 end
 
-%% Temperature matrix creation
+%% Temperature 
 
-Tsurf=[Tbulk; Tclado; Tcladi; Tfuelo; Tc];
-
+Tsurf=
 
 
 
