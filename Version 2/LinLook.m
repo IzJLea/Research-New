@@ -12,5 +12,5 @@ while (1)
     i=i+1;
 end
 
-Look=y(i)+(y(i+1)-y(i))/(x(i+1)-x(i))*(xx-x(i));
+Look=y(i)+(y(i)-y(i+1))/(x(i)-x(i+1))*(x(i)-xx);
 

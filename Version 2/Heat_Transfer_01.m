@@ -1,11 +1,12 @@
-%% Heat transfer model 
+%% Tsurfaces
+%Heat transfer model
 % First section determines temperature of outer clad surfaces under liquid
 % or vapor coolant flow
 
 % calculation of heat transfer coefficient for liquid and gas
 % temperature of surfaces
 
-function Tsurf=SurfTemp(Tin,Q,M,Lchannel)
+function Tsurf=Heat_Transfer_01(Tin,Q,M,Lchannel)
 
 % Physical data
 doutclad=0.0130; %m
@@ -30,11 +31,11 @@ kl=[0.680;0.677;0.673;0.669;0.663;0.650;0.632;0.609;0.581;0.548;0.509;0.469;0.42
 
 % Zirconium emissivity temperature range
 
-TezT=[100 150 200 300 400];
+%TezT=[100 150 200 300 400];
 
 % Zirconium emissivity
 
-Tez=[0.424 0.414 0.416 0.434 0.433];
+%Tez=[0.424 0.414 0.416 0.434 0.433];
 
 % UO2 thermal conductivity temperatures
 
@@ -78,9 +79,9 @@ diff=10;
 
 Guess=kUO20B(1);
 
-Tc=Tfuelo
+Tc=Tfuelo;
 
-for diff>1
+while diff>1
     
     Tave=(Tfuelo+Tc)/2;
     
@@ -101,6 +102,8 @@ end
 %% Temperature matrix creation
 
 Tsurf=[Tbulk; Tclado; Tcladi; Tfuelo; Tc];
+
+
 
 
 

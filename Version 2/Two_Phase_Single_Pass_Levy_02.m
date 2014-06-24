@@ -1,6 +1,6 @@
 %%Inputs and property calculation 
 
-Qchannel=4:0.1:10; %MW
+Qchannel=5:0.1:12; %MW
 
 Qchannelimp=Qchannel*1000*3412.14; %Btu/h
 
@@ -254,8 +254,6 @@ hv=[2.6756e+03
 2.3345e+03
 2.0843e+03];
 
-hv=reshape(hv,29,1);
-
 % latent heat (kJ/kg)
 
 hfv=[2.2564e+03
@@ -288,7 +286,6 @@ hfv=[2.2564e+03
 443.8000
 0];
 
-hfv=reshape(hfv,29,1);
 % Compressed water Pressures
 
 Pcomp=[5;10]; % MPa
@@ -337,8 +334,6 @@ sigma=[39.9500
 1.1300
 0.4500
 0];
-
-sigma=reshape(sigma,38,1);
 
 % Steam heat capacity temperatures
 
@@ -424,44 +419,42 @@ x=(hout-hfsys)./(hvsys-hfsys);
 n=length(Qchannel);
 
 Mchannel=zeros(1,n);
-rhosys=zeros(1,n);
+
+alphas=zeros(1,n);
 
 for in=1:n
-    
-      
     if x(in)<=0
-    rhosys(in)=rhofsys;
     
     Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT);
+    else
+    check=1;
+    eta=1;
+    alpha=x(in);
     
-    else   
-        xi=x(in);
+    while eta>=0.001
         
-        while 
-            
-            
-            
-            rhosysi=(rhovsys*xi))+((1-xi)*rhofsys);    
+        xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
-            LF=((1-xi)^1.75)/((1-xi)^2);
+        eta=x(in)-xLevy;
+        
+        alpha=alpha-eta;
+        
+    end
+    clear eta
+    LF=((1-x(in))^1.75)/((1-alpha)^2);
     
-            Mch=sqrt((Pout-Pin)*rhosysi/reffT/LF);
-            
-            houtnew=hin+(Qchannel.*1000./Mch);
-            
-            xi=(houtnew-hfsys)./(hvsys-hfsys);
-            
-            error1=abs(
-            
-            
+    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT/LF);
+    
+    alphas(in)=alpha;
     
     clear LF
     
+    clear alpha
     end
+    
+    
 end
 
-plot(x,rhosys);
-
-
+plot(Qchannel,Mchannel);
 
 

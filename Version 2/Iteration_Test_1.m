@@ -415,53 +415,20 @@ Dh=0.0074; %m
 
 % Heat transfer area
 
-Aht=9.1224; %m^2
 
-%% Mass flow calculation
 
-x=(hout-hfsys)./(hvsys-hfsys);
-
-n=length(Qchannel);
-
-Mchannel=zeros(1,n);
-rhosys=zeros(1,n);
-
-for in=1:n
-    
-      
-    if x(in)<=0
-    rhosys(in)=rhofsys;
-    
-    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT);
-    
-    else   
-        xi=x(in);
+x=0.2;
+check=1;
+alpha=x;
+    while check>=0.001
         
-        while 
-            
-            
-            
-            rhosysi=(rhovsys*xi))+((1-xi)*rhofsys);    
+        xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
-            LF=((1-xi)^1.75)/((1-xi)^2);
-    
-            Mch=sqrt((Pout-Pin)*rhosysi/reffT/LF);
-            
-            houtnew=hin+(Qchannel.*1000./Mch);
-            
-            xi=(houtnew-hfsys)./(hvsys-hfsys);
-            
-            error1=abs(
-            
-            
-    
-    clear LF
-    
+        error=x(in)-xLevy;
+        check=abs(error);
+        alpha=alpha+error;
     end
-end
-
-plot(x,rhosys);
-
-
-
-
+    
+    display(alpha);
+    display(x);
+    
