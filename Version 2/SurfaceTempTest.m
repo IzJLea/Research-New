@@ -2,7 +2,7 @@
 
 % channel as one uniform property channel
 
-Qchannel=5.0; %MW
+Qchannel=5.5; %MW
 
 Tin=267.2; %C
 
@@ -27,6 +27,8 @@ Q=Qchannel*1000/37; % kW
 Dptin=0.1034; % pressure tube inner diameter
 
 Dh=7.4885e-3; %m
+
+Qvol=Q/(pi()*dfuel^2/4*Lchannel);
 
 %%
 % Liquid coolant heat capacity temperatures (D20)
@@ -169,29 +171,23 @@ Tfuelo=(Q/(dfuel/2*Lchannel)/hgap)+Tcladi;
 
 %% Fuel pin centerline temperature
 
-diff=10;
+divf=1000;
 
-Tc=Tfuelo;
+rfuel=dfuel;
 
-while diff>1
+reval=linspace(rfuel,0,divf);
+
+Tfuel=zeros(1,divf);
+
+Tfuel(1)=Tfuelo;
+
+for pev=2:divf
     
-    Tave=(Tfuelo+Tc)/2;
+    Tfuel(pev)=(Qvol/4/kUO2(Tfuel(pev-1))*(reval(pev-1)^2-reval(pev)^2))+Tfuel(pev-1);
     
-    if Tave<400;
-        kUO2=kUO20B(1);
-        
-    else
-        kUO2=LinLook(kUO2T,kUO20B,Tave);
-        
-    end
-   
-    
-    Tcnew=(Q*dfuel/2/4/kUO2)+Tfuelo;
-    
-    diff=Tcnew-Tc;
-    
-    Tc=Tcnew;
 end
+
+Tc=Tfuel(divf);
 
 %% Temperature matrix creation
 
@@ -199,5 +195,11 @@ Tsurf=[Tbulk; Tclado; Tcladi; Tfuelo; Tc];
 
 
 display(Tsurf);
+
+Tplot=[Tfuel Tcladi Tclado];
+
+rplot=[reval ric roc];
+
+scatter(rplot,Tplot);
 
 
