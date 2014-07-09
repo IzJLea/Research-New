@@ -2,7 +2,7 @@
 
 % channel as one uniform property channel
 
-Qchannel=7; %MW
+Qchannel=5.5; %MW
 
 Tin=267.2; %C
 
@@ -28,7 +28,7 @@ Dptin=0.1034; % pressure tube inner diameter
 
 Dh=7.4885e-3; %m
 
-Qvol=Q/(pi()*dfuel^2/4*Lchannel);
+Qvol=Q/(pi()*dfuel^2/4*Lchannel); %kW
 
 %%
 % Liquid coolant heat capacity temperatures (D20)

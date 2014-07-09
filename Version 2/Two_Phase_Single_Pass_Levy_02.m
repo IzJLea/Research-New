@@ -358,47 +358,47 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 %% System Properties
 % Compressed water enthalpy 
 
-hin=LinLook(Pcomp,hcomp,Pin); %kJ/kg
+hin=interp1(Pcomp,hcomp,Pin); %kJ/kg
 
 % saturation temperature 
 
-Tsys=LinLook(Psat,Tsat,Pout); %C
+Tsys=interp1(Psat,Tsat,Pout); %C
 
 % saturation liquid enthalpy
 
-hfsys=LinLook(Psat,hf,Pout); %kJ/kg
+hfsys=interp1(Psat,hf,Pout); %kJ/kg
 
 % saturation vapour enthalpy
 
-hvsys=LinLook(Psat,hv,Pout); %kJ/kg
+hvsys=interp1(Psat,hv,Pout); %kJ/kg
 
 % saturation latent heat
 
-hfvsys=LinLook(Psat,hfv,Pout); %kJ/kg
+hfvsys=interp1(Psat,hfv,Pout); %kJ/kg
 
 % saturation liquid density
 
-rhofsys=LinLook(Psat,rhof,Pout);  %kg/m^3
+rhofsys=interp1(Psat,rhof,Pout);  %kg/m^3
 
 % saturation gas density
 
-rhovsys=LinLook(Psat,rhov,Pout); %kg/m^3
+rhovsys=interp1(Psat,rhov,Pout); %kg/m^3
 
 % Cp Liquid
 
-Cpl=LinLook(TCp,Cp,Tsys); %kJ/kg.K
+Cpl=interp1(TCp,Cp,Tsys); %kJ/kg.K
 
 % Thermal Conductivity
 
-ksys=LinLook(TCp,kl,Tsys); %W/m.K
+ksys=interp1(TCp,kl,Tsys); %W/m.K
 
 % Dynamic Viscosity
 
-mulsys=LinLook(TCp,mul,Tsys); %kg/m.s
+mulsys=interp1(TCp,mul,Tsys); %kg/m.s
 
 % Prandtl Number
 
-Prlsys=LinLook(TCp,Prl,Tsys); 
+Prlsys=interp1(TCp,Prl,Tsys); 
 
 % hout calculation
 

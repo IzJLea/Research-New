@@ -1,6 +1,6 @@
 %%Inputs and property calculation 
 
-Qchannel=4:0.01:12; %MW
+Qchannel=5:0.1:12; %MW
 
 Qchannelimp=Qchannel*1000*3412.14; %Btu/h
 
@@ -37,7 +37,7 @@ reff=keff.*Rho;
 
 reffT=sum(reff);
 
-Pout=8.3; %MPa
+Pout=10; %MPa
 
 Pin=((Pout*1000)-sum(DP))/1000;  %MPa
 
@@ -254,8 +254,6 @@ hv=[2.6756e+03
 2.3345e+03
 2.0843e+03];
 
-hv=reshape(hv,29,1);
-
 % latent heat (kJ/kg)
 
 hfv=[2.2564e+03
@@ -288,7 +286,6 @@ hfv=[2.2564e+03
 443.8000
 0];
 
-hfv=reshape(hfv,29,1);
 % Compressed water Pressures
 
 Pcomp=[5;10]; % MPa
@@ -338,8 +335,6 @@ sigma=[39.9500
 0.4500
 0];
 
-sigma=reshape(sigma,38,1);
-
 % Steam heat capacity temperatures
 
 TCp=[160;170;180;190;200;220;240;260;280;300;320;340;360];
@@ -363,35 +358,35 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 %% System Properties
 % Compressed water enthalpy 
 
-hin=LinLook(Pcomp,hcomp,Pin); %kJ/kg
+hin=interp1(Pcomp,hcomp,Pin); %kJ/kg
 
 % saturation temperature 
 
-Tsys=LinLook(Psat,Tsat,Pout); %C
+Tsys=interp1(Psat,Tsat,Pout); %C
 
 % saturation liquid enthalpy
 
-hfsys=LinLook(Psat,hf,Pout); %kJ/kg
+hfsys=interp1(Psat,hf,Pout); %kJ/kg
 
 % saturation vapour enthalpy
 
-hvsys=LinLook(Psat,hv,Pout); %kJ/kg
+hvsys=interp1(Psat,hv,Pout); %kJ/kg
 
 % saturation latent heat
 
-hfvsys=LinLook(Psat,hfv,Pout); %kJ/kg
+hfvsys=interp1(Psat,hfv,Pout); %kJ/kg
 
 % saturation liquid density
 
-rhofsys=LinLook(Psat,rhof,Pout);  %kg/m^3
+rhofsys=interp1(Psat,rhof,Pout);  %kg/m^3
 
 % saturation gas density
 
-rhovsys=LinLook(Psat,rhov,Pout); %kg/m^3
+rhovsys=interp1(Psat,rhov,Pout); %kg/m^3
 
 % Cp Liquid
 
-Cpl=LinLook(TCp,Cp,Tsys); %kJ/kg.K
+Cpl=interp1(TCp,Cp,Tsys); %kJ/kg.K
 
 % Thermal Conductivity
 
@@ -417,7 +412,7 @@ Dh=0.0074; %m
 
 Aht=9.1224; %m^2
 
-%% Single Phase mass flow calculation
+%% Mass flow calculation
 
 x=(hout-hfsys)./(hvsys-hfsys);
 
@@ -425,30 +420,41 @@ n=length(Qchannel);
 
 Mchannel=zeros(1,n);
 
+alphas=zeros(1,n);
+
 for in=1:n
     if x(in)<=0
     
     Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT);
     else
+    check=1;
+    eta=1;
+    alpha=x(in);
     
-    Mchannelf=sqrt((Pout-Pin)*rhofsys/reffT);
+    while eta>=0.001
+        
+        xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
-    Qrun=Qchannel(in);
+        eta=x(in)-xLevy;
+        
+        alpha=alpha-eta;
+        
+    end
+    clear eta
+    LF=((1-x(in))^1.75)/((1-alpha)^2);
     
-    alpha=LevyCandu(Pout,hout,Qrun,Mchannelf);
+    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT/LF);
     
-    rho=(alpha*rhofsys)+((1-alpha)*rhovsys);
+    alphas(in)=alpha;
     
-    Mchannel(in)=sqrt((Pout-Pin)*rho/reffT);
+    clear LF
     
     clear alpha
-    clear rhosys
     end
+    
+    
 end
 
-plot(Qchannel,Mchannel)
-
-
-    
+plot(Qchannel,Mchannel);
 
 

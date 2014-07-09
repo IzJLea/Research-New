@@ -1,6 +1,6 @@
 %%Inputs and property calculation 
 
-Qchannel=4:0.01:12; %MW
+Qchannel=5:0.1:12; %MW
 
 Qchannelimp=Qchannel*1000*3412.14; %Btu/h
 
@@ -37,7 +37,7 @@ reff=keff.*Rho;
 
 reffT=sum(reff);
 
-Pout=8.3; %MPa
+Pout=10; %MPa
 
 Pin=((Pout*1000)-sum(DP))/1000;  %MPa
 
@@ -254,8 +254,6 @@ hv=[2.6756e+03
 2.3345e+03
 2.0843e+03];
 
-hv=reshape(hv,29,1);
-
 % latent heat (kJ/kg)
 
 hfv=[2.2564e+03
@@ -288,7 +286,6 @@ hfv=[2.2564e+03
 443.8000
 0];
 
-hfv=reshape(hfv,29,1);
 % Compressed water Pressures
 
 Pcomp=[5;10]; % MPa
@@ -338,72 +335,102 @@ sigma=[39.9500
 0.4500
 0];
 
-sigma=reshape(sigma,38,1);
+% Steam heat capacity Pressures (MPa)
 
-% Steam heat capacity temperatures
+PCp=[617.8;791.7;1002.1;1254.4;1553.8;2318;3344;4688;6412;8581;11274;14586;18651]./1000;
 
-TCp=[160;170;180;190;200;220;240;260;280;300;320;340;360];
+% liquid Heat capacity (J/kg.K)
 
-% liquid Heat capacity
+Cpl=[4.340;4.370;4.410;4.460;4.500;4.610;4.760;4.970;5.280;5.750;6.540;8.240;14.96];
 
-Cp=[4.340;4.370;4.410;4.460;4.500;4.610;4.760;4.970;5.280;5.750;6.540;8.240;14.96];
+% vapour Heat capacity (J/kg.K)
 
-% liquid thermal conductivity
+Cpv=[2420; 2490; 2590;2710;2840;3110;3520;4070;4835;5980;7900;11870;25800]; 
+
+% liquid thermal conductivity (W/m.K)
 
 kl=[0.680;0.677;0.673;0.669;0.663;0.650;0.632;0.609;0.581;0.548;0.509;0.469;0.427];
 
-% dynamic viscosity
+% vapour thermal conductivity (W/m.K)
+
+kv=[0.0331;0.0347;0.0364;000382;0.0401;0.0442;0.0487;0.0540;0.0605;0.0695;0.0836;0.110;0.178];
+
+% liquid dynamic viscosity (kg/m.s)
 
 mul=[0.170e-3;0.160e-3;0.150e-3;0.142e-3;0.134e-3;0.122e-3;0.111e-3;0.102e-3;0.094e-3;0.086e-3;0.078e-3;0.070e-3;0.060e-3];
+
+% vapor dynamic viscosity (kg/m.s)
+
+muv=[1.434e-5;1.468e-5;1.502e-5;1.537e-5;1.571e-5;1.641e-5;1.712e-5;1.788e-5;1.870e-5;1.965e-5;2.084e-5;2.255e-5;2.571e-5];
 
 % liquid Prandtl Number
 
 Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 
+% vapor Prandtl Number
+
+Prv=[1.05;1.05;1.07;1.09;1.11;1.15;1.24;1.35;1.49;1.69;1.97;2.43;3.73];
+
 %% System Properties
 % Compressed water enthalpy 
 
-hin=LinLook(Pcomp,hcomp,Pin); %kJ/kg
+hin=interp1(Pcomp,hcomp,Pin); %kJ/kg
 
 % saturation temperature 
 
-Tsys=LinLook(Psat,Tsat,Pout); %C
+Tsys=interp1(Psat,Tsat,Pout); %C
 
 % saturation liquid enthalpy
 
-hfsys=LinLook(Psat,hf,Pout); %kJ/kg
+hfsys=interp1(Psat,hf,Pout); %kJ/kg
 
 % saturation vapour enthalpy
 
-hvsys=LinLook(Psat,hv,Pout); %kJ/kg
+hvsys=interp1(Psat,hv,Pout); %kJ/kg
 
 % saturation latent heat
 
-hfvsys=LinLook(Psat,hfv,Pout); %kJ/kg
+hfvsys=interp1(Psat,hfv,Pout); %kJ/kg
 
 % saturation liquid density
 
-rhofsys=LinLook(Psat,rhof,Pout);  %kg/m^3
+rhofsys=interp1(Psat,rhof,Pout);  %kg/m^3
 
 % saturation gas density
 
-rhovsys=LinLook(Psat,rhov,Pout); %kg/m^3
+rhovsys=interp1(Psat,rhov,Pout); %kg/m^3
 
-% Cp Liquid
+% Cp Liquid  
 
-Cpl=LinLook(TCp,Cp,Tsys); %kJ/kg.K
+Cplsys=interp1(PCp,Cpl,Pout); %kJ/kg.K
 
-% Thermal Conductivity
+% Cp vapour
 
-ksys=LinLook(TCp,kl,Tsys); %W/m.K
+Cpvsys=interp1(PCp,Cpv,Pout); %kJ/kg.K
 
-% Dynamic Viscosity
+% liquid Thermal Conductivity
 
-mulsys=LinLook(TCp,mul,Tsys); %kg/m.s
+klsys=interp1(PCp,kl,Pout); %W/m.K
 
-% Prandtl Number
+% vapour Termal Conductivity 
 
-Prlsys=LinLook(TCp,Prl,Tsys); 
+kvsys=interp1(PCp,kv,Pout); %W/m.K
+
+% Liquid Dynamic Viscosity
+
+mulsys=interp1(PCp,mul,Pout); %kg/m.s
+
+% Vapour Dynamic Viscosity
+
+muvsys=interp1(PCp,muv,Pout); %kg/m.s
+
+% Liquid Prandtl Number
+
+Prlsys=interp1(PCp,Prl,Pout); 
+
+% Vapour Prandtl Number
+
+Prvsys=interp1(PCp,Prv,Pout);
 
 % hout calculation
 
@@ -417,7 +444,7 @@ Dh=0.0074; %m
 
 Aht=9.1224; %m^2
 
-%% Single Phase mass flow calculation
+%% Mass flow calculation
 
 x=(hout-hfsys)./(hvsys-hfsys);
 
@@ -425,30 +452,113 @@ n=length(Qchannel);
 
 Mchannel=zeros(1,n);
 
+alphas=zeros(1,n);
+
 for in=1:n
     if x(in)<=0
     
     Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT);
     else
+    check=1;
+    eta=1;
+    alpha=x(in);
     
-    Mchannelf=sqrt((Pout-Pin)*rhofsys/reffT);
+    while eta>=0.001
+        
+        xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
-    Qrun=Qchannel(in);
+        eta=x(in)-xLevy;
+        
+        alpha=alpha-eta;
+        
+    end
+    clear eta
+    LF=((1-x(in))^1.75)/((1-alpha)^2);
     
-    alpha=LevyCandu(Pout,hout,Qrun,Mchannelf);
+    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT/LF);
     
-    rho=(alpha*rhofsys)+((1-alpha)*rhovsys);
+    alphas(in)=alpha;
     
-    Mchannel(in)=sqrt((Pout-Pin)*rho/reffT);
+    clear LF
     
     clear alpha
-    clear rhosys
+    end
+    
+    
+end
+
+
+
+plot(Qchannel,Mchannel);
+
+%% Determination of system reynolds number
+
+% dynamic viscosity
+musys=zeros(1,length(x));
+
+for lm=1:length(x)
+    
+    if x(lm)<=0
+        
+        musys(lm)=mulsys;
+    else
+        musys(lm)=((x(lm)/muvsys)+((1-x(lm))/mulsys))^(-1);
+    
+    end
+end
+clear lm
+
+% density 
+
+rhosys=zeros(1,length(alphas));
+
+for lr=1:length(alphas)
+    
+    if alphas(lr)<=0
+        
+        rhosys(lr)=rhofsys;
+        
+    else
+        
+        rhosys(lr)=(alphas(lr)*rhovsys)+((1-alphas(lr))*rhofsys);
+        
     end
 end
 
-plot(Qchannel,Mchannel)
+clear lr
+
+% Reynold's number calculation
+
+Reynolds=Mchannel.*rhosys.*Dh./musys;
 
 
+
+%% bulk temperature 
+% This is actually the highest fluid temperature reached in the channel,
+% but as there is negligible axial heat transfer this is where the clad and
+% centerline temperatures will be calculated so that the 
+
+Tbulk=zeros(1,length(x));
+
+for lt=1:length(x)
     
+    if x(lt)<=0
+        
+        Tbulk(lt)=(Qchannel(lt)*1000/Mchannel(lt)/Cplsys)+Tin;
+        
+    else Tbulk(lt)=Tsys;
+    end
+    
+    if Tbulk(lt)>Tsys
+        Tbulk(lt)=Tsys;
+    end
+end
+
+
+%% Outer clad temperature
+
+Q=Qchannel/37;
+
+
 
 
