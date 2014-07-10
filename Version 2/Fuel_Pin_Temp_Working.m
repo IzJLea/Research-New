@@ -29,7 +29,7 @@ Dptin=0.1034; % pressure tube inner diameter
 Dh=7.4885e-3; %m
 
 Qvol=Q/(pi()*dfuel^2/4*Lchannel); %kW
-
+ 
 %%
 % Liquid coolant heat capacity temperatures (D20)
 

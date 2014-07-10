@@ -39,7 +39,7 @@ reffT=sum(reff);
 
 Pout=10; %MPa
 
-Pin=((Pout*1000)-sum(DP))/1000;  %MPa
+Pin=((Pout*1000)+sum(DP))/1000;  %MPa
 
 
 %% Physical data import
@@ -288,11 +288,52 @@ hfv=[2.2564e+03
 
 % Compressed water Pressures
 
-Pcomp=[5;10]; % MPa
+Pcomp=[5;10;15]; % MPa
 
 % Compressed water enthalpy (10 MPa, 260 C)
 
-hcomp=[1.1349e+03;1.1343e+03]; %kJ/kg
+hcomp=[1.1349e+03;1.1343e+03;1.5924e3]; %kJ/kg
+
+% Temp for surface tension
+
+Tsigma=[190
+195
+200
+205
+210
+215
+220
+225
+230
+235
+240
+245
+250
+255
+260
+265
+270
+275
+280
+285
+290
+295
+300
+305
+310
+315
+320
+325
+330
+335
+340
+345
+350
+355
+360
+365
+370
+374];
 
 % Surface tension mN/m
 
@@ -374,7 +415,7 @@ Prv=[1.05;1.05;1.07;1.09;1.11;1.15;1.24;1.35;1.49;1.69;1.97;2.43;3.73];
 %% System Properties
 % Compressed water enthalpy 
 
-hin=interp1(Pcomp,hcomp,Pin); %kJ/kg
+hin=interp1(Pcomp,hcomp,Pout); %kJ/kg
 
 % saturation temperature 
 
@@ -436,6 +477,10 @@ Prvsys=interp1(PCp,Prv,Pout);
 
 hout=hin+(Qchannel.*1000./M); %kJ/kg
 
+% surface tension
+
+sigmasys=interp1(Tsigma,sigma,Tsys);
+
 % Hydraulic Diameter
 
 Dh=0.0074; %m
@@ -457,7 +502,7 @@ alphas=zeros(1,n);
 for in=1:n
     if x(in)<=0
     
-    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT);
+    Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT);
     else
     check=1;
     eta=1;
@@ -475,7 +520,7 @@ for in=1:n
     clear eta
     LF=((1-x(in))^1.75)/((1-alpha)^2);
     
-    Mchannel(in)=sqrt((Pout-Pin)*rhofsys/reffT/LF);
+    Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT/LF);
     
     alphas(in)=alpha;
     
@@ -532,6 +577,22 @@ clear lr
 Reynolds=Mchannel.*rhosys.*Dh./musys;
 
 
+%liquid only Reynold's number
+
+ReynoldsLO=zeros(1,length(x));
+
+for Rind=1:length(x)
+    
+    if x(Rind)<=0
+        
+        ReynoldsLO(Rind)=Mchannel(Rind)*rhofsys*Dh/mulsys;
+    else
+        
+        ReynoldsLO(Rind)=(1-x(Rind))*Mchannel(Rind)*rhofsys*Dh/mulsys;
+    end
+end
+
+
 
 %% bulk temperature 
 % This is actually the highest fluid temperature reached in the channel,
@@ -560,9 +621,67 @@ for lt=1:length(x)
 end
 
 
-%% Outer clad temperature
+%% Heat transfer coefficien
+% For initial calculations the heat transfer coefficient will be calculated
+% assuming single-phase liquid convection for thermodynamic quality below 0
+% (Dittun-Boelter correlation)
+% and two-phase forced convection for regions of thermodynamic quality
+% between 0 and 1 (Chen Correlation)
 
-Q=Qchannel/37;
+Tclado=zeros(1,length(x));
+
+Lchannel=5.94; %m
+
+doutclad=0.0138; %m
+
+roc=doutclad/2; %m
+
+dfuel=0.0122; %m
+
+tclad=0.00038; %m
+
+Q=Qchannel*1000/37; % kW
+
+Dptin=0.1034; % pressure tube inner diameter
+
+Qvol=Q/(pi()*dfuel^2/4*Lchannel); %kW
+
+for hind=1:length(x)
+    
+    if x(hind)<=0
+        
+        Nu=0.023*(Reynolds(hind)^0.8)*(Prlsys^0.4);
+        
+        hfluid=Nu*klsys/Dh;
+        
+        Tclado(hind)=(Q(hind)/(hfluid*doutclad*Lchannel*pi()))+Tbulk(hind); 
+        
+    else
+        
+        xtt=((1-x(hind))/x(hind))^0.9*(rhovsys/rhofsys)^0.5*(mulsys/muvsys)^0.1;
+        
+        if (1/xtt)<=0.1
+            
+            F=1;
+        else
+            F=2.35*((1/xtt)+0.213)^0.736;
+            
+        end
+        
+        S=1/(1+(2.53e-6*ReynoldsLO(hind)^1.17));
+        
+        
+        
+        syms Tclad
+        
+        Tclado(hind)=solve((Q(hind)/((0.023*ReynoldsLO(hind)^0.8*Prlsys^0.4*klsys/Dh*F)+(0.00122*(klsys^0.79*(Cplsys*1000)^0.45*rhofsys^0.49/(sigmasys/1000)^0.5/mulsys^0.29/(hfvsys*1000)^0.24/rhovsys^0.24)*((Tclad-Tbulk(hind))^0.24)*(((Pin-Pout)/1000000)^0.75)*S))/Lchannel/pi())+Tbulk(hind)-Tclad,Tclad);
+        
+        clear Tclad
+        
+        
+        
+    end
+end
 
 
 
