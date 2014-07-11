@@ -171,7 +171,7 @@ Tfuelo=(Q/(dfuel/2*Lchannel)/hgap)+Tcladi;
 
 %% Fuel pin centerline temperature
 
-divf=1000;
+divf=10000;
 
 rfuel=dfuel/2;
 

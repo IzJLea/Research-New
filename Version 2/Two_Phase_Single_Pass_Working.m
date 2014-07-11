@@ -10,6 +10,16 @@ Achannel=0.0034;%m^2
 
 Achannelimp=Achannel*3.2808^2; %ft^2
 
+doutclad=0.0138; %m
+
+roc=doutclad/2;
+
+dfuel=0.0122; %m
+
+tclad=0.00038; %m
+
+Lchannel=5.94; %m
+
 %% Initial single pass k calculation- 
 % pressure differences in each pass section
 %
@@ -582,16 +592,13 @@ Reynolds=Mchannel.*rhosys.*Dh./musys;
 ReynoldsLO=zeros(1,length(x));
 
 for Rind=1:length(x)
-    
-    if x(Rind)<=0
-        
-        ReynoldsLO(Rind)=Mchannel(Rind)*rhofsys*Dh/mulsys;
-    else
-        
-        ReynoldsLO(Rind)=(1-x(Rind))*Mchannel(Rind)*rhofsys*Dh/mulsys;
-    end
+           
+    ReynoldsLO(Rind)=Mchannel(Rind)*rhofsys*Dh/mulsys;
 end
 
+%% Volumetric heat generation in fuel
+
+Qvol=Qchannel./Lchannel/pi()/dfuel^2/4*1000;
 
 
 %% bulk temperature 
@@ -621,68 +628,121 @@ for lt=1:length(x)
 end
 
 
-%% Heat transfer coefficien
-% For initial calculations the heat transfer coefficient will be calculated
-% assuming single-phase liquid convection for thermodynamic quality below 0
-% (Dittun-Boelter correlation)
-% and two-phase forced convection for regions of thermodynamic quality
-% between 0 and 1 (Chen Correlation)
+hl=zeros(1,length(x));
 
-Tclado=zeros(1,length(x));
-
-Lchannel=5.94; %m
-
-doutclad=0.0138; %m
-
-roc=doutclad/2; %m
-
-dfuel=0.0122; %m
-
-tclad=0.00038; %m
-
-Q=Qchannel*1000/37; % kW
-
-Dptin=0.1034; % pressure tube inner diameter
-
-Qvol=Q/(pi()*dfuel^2/4*Lchannel); %kW
-
-for hind=1:length(x)
+for lh=1:length(x)
     
-    if x(hind)<=0
+    hl(lh)=0.023*ReynoldsLO(lh)^0.8*Prlsys^0.4*klsys/Dh;
+    
+end
+
+hsys=zeros(1,length(x));
+
+for hsysind=1:length(x)
+    
+    if x(hsysind)<=0
         
-        Nu=0.023*(Reynolds(hind)^0.8)*(Prlsys^0.4);
-        
-        hfluid=Nu*klsys/Dh;
-        
-        Tclado(hind)=(Q(hind)/(hfluid*doutclad*Lchannel*pi()))+Tbulk(hind); 
+        hsys(hsysind)=hl(hsysind);
         
     else
         
-        xtt=((1-x(hind))/x(hind))^0.9*(rhovsys/rhofsys)^0.5*(mulsys/muvsys)^0.1;
+        Co=((1-x(hsysind))/x(hsysind))^0.8*(rhovsys/rhofsys)^0.5;
         
-        if (1/xtt)<=0.1
+        Fr=(Mchannel(hsysind)/Achannel)^2/(rhofsys^2*9.81*Dh);
+        
+        if Fr>0.04
             
-            F=1;
+            C=0;
         else
-            F=2.35*((1/xtt)+0.213)^0.736;
-            
+            C=0.3;
         end
+       
+        Bo=Qchannel(hsysind)/(pi()*37*doutclad*Lchannel)/(Mchannel(hsysind)/Achannel*1000*hfvsys);
         
-        S=1/(1+(2.53e-6*ReynoldsLO(hind)^1.17));
+        htpconv=hl(hsysind)*((1.1360*Co^-0.9*(25*Fr)^C)+(667.2*Bo^0.7));
         
+        htpnuc=hl(hsysind)*((0.6683*Co^-0.2*(25*Fr)^C)+(1058.0*Bo^0.7));
         
-        
-        syms Tclad
-        
-        Tclado(hind)=solve((Q(hind)/((0.023*ReynoldsLO(hind)^0.8*Prlsys^0.4*klsys/Dh*F)+(0.00122*(klsys^0.79*(Cplsys*1000)^0.45*rhofsys^0.49/(sigmasys/1000)^0.5/mulsys^0.29/(hfvsys*1000)^0.24/rhovsys^0.24)*((Tclad-Tbulk(hind))^0.24)*(((Pin-Pout)/1000000)^0.75)*S))/Lchannel/pi())+Tbulk(hind)-Tclad,Tclad);
-        
-        clear Tclad
-        
-        
-        
+        if htpnuc>htpconv
+            
+            hsys(hsysind)=htpnuc;
+            
+        else
+            
+            hsys(hsysind)=htpconv;
+        end
     end
 end
 
+%% Outer Clad Temperature
 
+Tclado=zeros(1,length(x));
+
+Q=Qchannel.*1000./37;
+
+for Tcladoind=1:length(x)
+    
+    Tclado(Tcladoind)=(Q(Tcladoind)/(hsys(Tcladoind)*doutclad*Lchannel*pi()))+Tbulk(Tcladoind);
+        
+end
+
+%% Inner Clad Temperature
+
+
+Tcladi=zeros(1,length(x));
+
+ric=roc-tclad;
+
+for Tcladind=1:length(x)
+
+    kzirc=(7.51+(0.362e-3*Tclado(Tcladind))-(0.618e-7*Tclado(Tcladind)^2)+(0.718e-11*Tclado(Tcladind)^3))*10^-3;
+
+    Tcladi(Tcladind)=(Q(Tcladind)*log(roc/ric)/(2*pi()*Lchannel*kzirc))+Tclado(Tcladind);
+    
+end
+
+%% outer fuel meat temperature
+
+Tfuelo=zeros(1,length(x));
+
+dman=ric-(dfuel/2); %m
+
+djump=10e-6; %m
+
+
+
+for Tfueloind=1:length(x)
+    
+    kgap=0.0476+(0.362e-3*Tcladi(Tfueloind))-(0.618e-7*Tcladi(Tfueloind)^2)+(0.718e-11*Tcladi(Tfueloind)^3)*10^-3; %kW/m.C
+
+    hgap=kgap/(dman+djump);
+    
+    Tfuelo(Tfueloind)=(Q(Tfueloind)/(dfuel/2*Lchannel)/hgap)+Tcladi(Tfueloind);
+end
+
+%% Fuel centerline Temperature
+
+Tc=zeros(1,length(x));
+
+rfuel=dfuel/2;
+
+for Tcind=1:length(x)
+    
+    divf=1000;
+
+    reval=linspace(rfuel,0,divf);
+
+    Tfuel=zeros(1,divf);
+
+    Tfuel(1)=Tfuelo(Tcind);
+
+    for pev=2:divf
+    
+        Tfuel(pev)=(Qvol(Tcind)/4/kUO2(Tfuel(pev-1))*(reval(pev-1)^2-reval(pev)^2))+Tfuel(pev-1);
+    
+    end
+
+    Tc(Tcind)=Tfuel(divf);
+end
 
 
