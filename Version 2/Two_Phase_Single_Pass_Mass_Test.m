@@ -483,9 +483,6 @@ Prlsys=interp1(PCp,Prl,Pout);
 
 Prvsys=interp1(PCp,Prv,Pout);
 
-% hout calculation
-
-hout=hin+(Qchannel.*1000./M); %kJ/kg
 
 % surface tension
 
@@ -501,15 +498,19 @@ Aht=9.1224; %m^2
 
 %% Mass flow calculation
 
+
+% hout calculation
+
+hout=hin+(Qchannel.*1000./M); %kJ/kg
+
 x=(hout-hfsys)./(hvsys-hfsys);
 
-n=length(Qchannel);
+Mchannel=zeros(1,length(Qchannel));
 
-Mchannel=zeros(1,n);
+LF=zeros(1,length(Qchannel));
 
-LF=zeros(1,length(x));
+alphas=zeros(1, length(Qchannel));
 
-alphas=zeros(1,n);
 
 for in=1:n
     if x(in)<=0
@@ -543,6 +544,17 @@ for in=1:n
     
     
 end
+
+
+
+
+
+
+
+
+
+
+
 
 
 
