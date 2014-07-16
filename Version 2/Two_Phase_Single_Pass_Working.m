@@ -520,7 +520,7 @@ for in=1:n
         eta=1;
         alpha=x(in);
     
-        while eta>=0.001
+        while eta>=0.0001
         
             xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
