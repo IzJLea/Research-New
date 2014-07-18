@@ -508,27 +508,18 @@ Mchannel=sqrt((Pin-Pout)*rhofsys/reffT);
 hout=hin+(Qchannel*1000/Mchannel); %kJ/kg
 
 x=(hout-hfsys)/(hvsys-hfsys);
-eta=1;
 
+rhosys=rhofsys;
 if x>0
-    alpha=x;
-    while eta>=0.00001
-        
-            xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x)))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
-            eta=x-xLevy;
-
-            alpha=alpha-eta;
-        
-    end
-    rhosys=(alpha*rhovsys)+((1-alpha)*rhofsys);
+    al=(1+(rhovsys/rhofsys*(1-x)/x))^-1;
     
-    Mchannel=sqrt((Pin-Pout)*rhosys/reffT);
     
-else
-    rhosys=rhofsys;
+    LF=1/(1-al)^1.8;
     
-    Mchannel=sqrt((Pin-Pout)*rhosys/reffT);
+    Mchannel=sqrt((Pin-Pout)*rhofsys/reffT/LF);
+    
+    rhosys=(al)*rhovsys+((1-al)*rhofsys);
 end
 
 
@@ -574,9 +565,15 @@ else
     ReynoldsLO=Mchannel*(1-x)*rhofsys*Dh/mulsys;
 end
 
+%% Wall Reynolds
+
+Reynoldswall=Mchannel.*rhosys.*Dh./musys;
+
 %% Volumetric heat generation in fuel
 
 Qvol=Qchannel./Lchannel/pi()/dfuel^2/4*1000;
+
+
 
 
 %% bulk temperature 
@@ -711,8 +708,24 @@ end
 
 Tc=Tfuel(divf);
 
+% %% Pressure tube inner temperature
+% 
+% dPT=0.11; %m diameter of pressure tube
+% 
+% PTthick=0.004; %m pressure tube thickness
+% 
+% Twallin=Tbulk-(Qchannel*1000/hsys/pi()/dPT*Lchannel);
+% 
+% %% Pressure tube outer temperature
+% 
+% Twallo=Twallin-(Qchannel*1000*log(((dPT/2)+PTthick)/(dPT/2))/(2*pi()*Lchannel*kzirc));
+
+if x<=0
+    al=0;
+end
+
+Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys;al];
 
 
-Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc];
 
 

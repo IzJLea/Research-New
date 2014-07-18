@@ -1,14 +1,17 @@
-%%Inputs and property calculation 
+%% Single channel function
 
-Qchannel=5:0.1:12; %MW
+function Res=single_channel_new(Qin, Tenter)
 
-Qchannelimp=Qchannel*1000*3412.14; %Btu/h
 
-Tin=267.2; %C
+Qchannel=Qin; %MW
+
+
+
+Tin=Tenter; %C
 
 Achannel=0.0034;%m^2
 
-Achannelimp=Achannel*3.2808^2; %ft^2
+
 
 doutclad=0.0138; %m
 
@@ -306,85 +309,85 @@ hcomp=[1.1349e+03;1.1343e+03;1.5924e3]; %kJ/kg
 
 % Temp for surface tension
 
-Tsigma=[190
-195
-200
-205
-210
-215
-220
-225
-230
-235
-240
-245
-250
-255
-260
-265
-270
-275
-280
-285
-290
-295
-300
-305
-310
-315
-320
-325
-330
-335
-340
-345
-350
-355
-360
-365
-370
-374];
+% Tsigma=[190
+% 195
+% 200
+% 205
+% 210
+% 215
+% 220
+% 225
+% 230
+% 235
+% 240
+% 245
+% 250
+% 255
+% 260
+% 265
+% 270
+% 275
+% 280
+% 285
+% 290
+% 295
+% 300
+% 305
+% 310
+% 315
+% 320
+% 325
+% 330
+% 335
+% 340
+% 345
+% 350
+% 355
+% 360
+% 365
+% 370
+% 374];
 
 % Surface tension mN/m
 
-sigma=[39.9500
-38.8300
-37.6900
-36.5500
-35.4100
-34.2500
-33.1000
-31.9300
-30.7700
-29.6000
-28.4200
-27.2400
-26.0600
-24.8700
-23.6700
-22.4800
-21.3000
-20.1100
-18.9400
-17.7700
-16.6100
-15.4500
-14.3000
-13.1700
-12.0400
-10.9200
-9.8100
-8.7300
-7.6600
-6.6100
-5.5900
-4.6000
-3.6500
-2.7500
-1.9000
-1.1300
-0.4500
-0];
+% sigma=[39.9500
+% 38.8300
+% 37.6900
+% 36.5500
+% 35.4100
+% 34.2500
+% 33.1000
+% 31.9300
+% 30.7700
+% 29.6000
+% 28.4200
+% 27.2400
+% 26.0600
+% 24.8700
+% 23.6700
+% 22.4800
+% 21.3000
+% 20.1100
+% 18.9400
+% 17.7700
+% 16.6100
+% 15.4500
+% 14.3000
+% 13.1700
+% 12.0400
+% 10.9200
+% 9.8100
+% 8.7300
+% 7.6600
+% 6.6100
+% 5.5900
+% 4.6000
+% 3.6500
+% 2.7500
+% 1.9000
+% 1.1300
+% 0.4500
+% 0];
 
 % Steam heat capacity Pressures (MPa)
 
@@ -396,7 +399,7 @@ Cpl=[4.340;4.370;4.410;4.460;4.500;4.610;4.760;4.970;5.280;5.750;6.540;8.240;14.
 
 % vapour Heat capacity (J/kg.K)
 
-Cpv=[2420; 2490; 2590;2710;2840;3110;3520;4070;4835;5980;7900;11870;25800]; 
+%Cpv=[2420; 2490; 2590;2710;2840;3110;3520;4070;4835;5980;7900;11870;25800]; 
 
 % liquid thermal conductivity (W/m.K)
 
@@ -404,7 +407,7 @@ kl=[0.680;0.677;0.673;0.669;0.663;0.650;0.632;0.609;0.581;0.548;0.509;0.469;0.42
 
 % vapour thermal conductivity (W/m.K)
 
-kv=[0.0331;0.0347;0.0364;000382;0.0401;0.0442;0.0487;0.0540;0.0605;0.0695;0.0836;0.110;0.178];
+%kv=[0.0331;0.0347;0.0364;000382;0.0401;0.0442;0.0487;0.0540;0.0605;0.0695;0.0836;0.110;0.178];
 
 % liquid dynamic viscosity (kg/m.s)
 
@@ -420,7 +423,7 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 
 % vapor Prandtl Number
 
-Prv=[1.05;1.05;1.07;1.09;1.11;1.15;1.24;1.35;1.49;1.69;1.97;2.43;3.73];
+%Prv=[1.05;1.05;1.07;1.09;1.11;1.15;1.24;1.35;1.49;1.69;1.97;2.43;3.73];
 
 %% System Properties
 % Compressed water enthalpy 
@@ -457,7 +460,7 @@ Cplsys=interp1(PCp,Cpl,Pout); %kJ/kg.K
 
 % Cp vapour
 
-Cpvsys=interp1(PCp,Cpv,Pout); %kJ/kg.K
+%Cpvsys=interp1(PCp,Cpv,Pout); %kJ/kg.K
 
 % liquid Thermal Conductivity
 
@@ -465,7 +468,7 @@ klsys=interp1(PCp,kl,Pout); %W/m.K
 
 % vapour Termal Conductivity 
 
-kvsys=interp1(PCp,kv,Pout); %W/m.K
+%kvsys=interp1(PCp,kv,Pout); %W/m.K
 
 % Liquid Dynamic Viscosity
 
@@ -481,15 +484,12 @@ Prlsys=interp1(PCp,Prl,Pout);
 
 % Vapour Prandtl Number
 
-Prvsys=interp1(PCp,Prv,Pout);
+%Prvsys=interp1(PCp,Prv,Pout);
 
-% hout calculation
-
-hout=hin+(Qchannel.*1000./M); %kJ/kg
 
 % surface tension
 
-sigmasys=interp1(Tsigma,sigma,Tsys);
+%sigmasys=interp1(Tsigma,sigma,Tsys);
 
 % Hydraulic Diameter
 
@@ -497,92 +497,77 @@ Dh=0.0074; %m
 
 % Heat transfer area
 
-Aht=9.1224; %m^2
+%Aht=9.1224; %m^2
 
 %% Mass flow calculation
 
-x=(hout-hfsys)./(hvsys-hfsys);
+Mchannel=sqrt((Pin-Pout)*rhofsys/reffT);
 
-n=length(Qchannel);
+% hout calculation
 
-Mchannel=zeros(1,n);
+hout=hin+(Qchannel*1000/Mchannel); %kJ/kg
 
-LF=zeros(1,length(x));
-
-alphas=zeros(1,n);
-
-for in=1:n
-    if x(in)<=0
+x=(hout-hfsys)/(hvsys-hfsys);
+eta=1;
+Mchanneldiff=1;
+if x>0
+    alpha=x;
     
-        Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT);
-    else
-        check=1;
-        eta=1;
-        alpha=x(in);
-    
-        while eta>=0.0001
+    while Mchanneldiff>=0.00001
         
-            xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
+        while eta>=0.00001
+        
+                xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x)))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
     
-            eta=x(in)-xLevy;
+                eta=x-xLevy;
 
-            alpha=alpha-eta;
+                alpha=alpha-eta;
         
         end
-    clear eta
-        LF(in)=((1-x(in))^1.75)/(1-alpha)^2;
+        rhosys=(alpha*rhovsys)+((1-alpha)*rhofsys);
     
-        Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT/LF(in));
+        Mchannelnew=sqrt((Pin-Pout)*rhosys/reffT);
     
-        alphas(in)=alpha;
-    
-    clear LF
-    
-    clear alpha
+        Mchanneldiff=abs(Mchannel-Mchannelnew);
+        
+        Mchannel=Mchannelnew;
+        
+        hout=hin+(Qchannel*1000/Mchannel);
+        
+        x=(hout-hfsys)/(hvsys-hfsys);
     end
-    
     
 end
 
 
 
-plot(Qchannel,Mchannel);
+
+
+
+
+
+
+    
+    
+    
+
+
+
 
 %% Determination of system reynolds number
 
 % dynamic viscosity
-musys=zeros(1,length(x));
 
-for lm=1:length(x)
+musys=((x/muvsys)+((1-x)/mulsys)).^(-1);
     
-    if x(lm)<=0
-        
-        musys(lm)=mulsys;
-    else
-        musys(lm)=((x(lm)/muvsys)+((1-x(lm))/mulsys))^(-1);
-    
-    end
-end
-clear lm
+ 
 
 % density 
 
-rhosys=zeros(1,length(alphas));
 
-for lr=1:length(alphas)
-    
-    if alphas(lr)<=0
-        
-        rhosys(lr)=rhofsys;
-        
-    else
-        
-        rhosys(lr)=(alphas(lr)*rhovsys)+((1-alphas(lr))*rhofsys);
-        
-    end
-end
 
-clear lr
+
+
 
 % Reynold's number calculation
 
@@ -591,11 +576,10 @@ Reynolds=Mchannel.*rhosys.*Dh./musys;
 
 %liquid only Reynold's number
 
-ReynoldsLO=zeros(1,length(x));
-
-for Rind=1:length(x)
-           
-    ReynoldsLO(Rind)=Mchannel(Rind)*rhofsys*Dh/mulsys;
+if x<=0
+    ReynoldsLO=Reynolds;
+else
+    ReynoldsLO=Mchannel*(1-x)*rhofsys*Dh/mulsys;
 end
 
 %% Volumetric heat generation in fuel
@@ -613,144 +597,131 @@ Qvol=Qchannel./Lchannel/pi()/dfuel^2/4*1000;
 
 
 
-Tbulk=zeros(1,length(x));
-
-for lt=1:length(x)
     
-    if x(lt)<=0
+if x<=0
         
-        Tbulk(lt)=(Qchannel(lt)*1000/Mchannel(lt)/Cplsys)+Tin;
+    Tbulk=(Qchannel*1000/Mchannel/Cplsys)+Tin;
         
-    else Tbulk(lt)=Tsys;
-    end
+else Tbulk=Tsys;
+end
     
-    if Tbulk(lt)>Tsys
-        Tbulk(lt)=Tsys;
-    end
+if Tbulk>Tsys
+    Tbulk=Tsys;
 end
 
 
-hl=zeros(1,length(x));
 
-for lh=1:length(x)
-    
-    hl(lh)=0.023*ReynoldsLO(lh)^0.8*Prlsys^0.4*klsys/Dh;
-    
-end
 
-hsys=zeros(1,length(x));
-
-for hsysind=1:length(x)
     
-    if x(hsysind)<=0
+hl=0.023*ReynoldsLO.^0.8*Prlsys.^0.4*klsys/Dh;
+    
+if x<=0
         
-        hsys(hsysind)=hl(hsysind);
+    hsys=hl;
         
-    else
+else
         
-        Co=((1-x(hsysind))/x(hsysind))^0.8*(rhovsys/rhofsys)^0.5;
+    Co=((1-x)/x)^0.8*(rhovsys/rhofsys)^0.5;
         
-        Fr=(Mchannel(hsysind)/Achannel)^2/(rhofsys^2*9.81*Dh);
+    Fr=(Mchannel/Achannel)^2/(rhofsys^2*9.81*Dh);
         
-        if Fr>0.04
+    if Fr>0.04
             
             C=0;
-        else
+    else
             C=0.3;
-        end
+    end
        
-        Bo=Qchannel(hsysind)/(pi()*37*doutclad*Lchannel)/(Mchannel(hsysind)/Achannel*1000*hfvsys);
+    Bo=Qchannel/(pi()*37*doutclad*Lchannel)/(Mchannel/Achannel*1000*hfvsys);
         
-        htpconv=hl(hsysind)*((1.1360*Co^-0.9*(25*Fr)^C)+(667.2*Bo^0.7));
+    htpconv=hl*((1.1360*Co.^-0.9*(25*Fr).^C)+(667.2*Bo.^0.7));
         
-        htpnuc=hl(hsysind)*((0.6683*Co^-0.2*(25*Fr)^C)+(1058.0*Bo^0.7));
+    htpnuc=hl*((0.6683*Co.^-0.2*(25*Fr).^C)+(1058.0*Bo.^0.7));
         
-        if htpnuc>htpconv
+    if htpnuc>htpconv
             
-            hsys(hsysind)=htpnuc;
+        hsys=htpnuc;
             
-        else
+    else
             
-            hsys(hsysind)=htpconv;
-        end
+        hsys=htpconv;
     end
 end
+
+
 
 %% Outer Clad Temperature
 
-Tclado=zeros(1,length(x));
 
-Q=Qchannel.*1000./37;
 
-for Tcladoind=1:length(x)
+Q=Qchannel*1000/37;
+
     
-    Tclado(Tcladoind)=(Q(Tcladoind)/(hsys(Tcladoind)*doutclad*Lchannel*pi()))+Tbulk(Tcladoind);
+Tclado=(Q/(hsys*doutclad*Lchannel*pi()))+Tbulk;
         
-end
+
 
 %% Inner Clad Temperature
 
 
-Tcladi=zeros(1,length(x));
+
 
 ric=roc-tclad;
 
-for Tcladind=1:length(x)
 
-    kzirc=(7.51+(0.362e-3*Tclado(Tcladind))-(0.618e-7*Tclado(Tcladind)^2)+(0.718e-11*Tclado(Tcladind)^3))*10^-3;
 
-    Tcladi(Tcladind)=(Q(Tcladind)*log(roc/ric)/(2*pi()*Lchannel*kzirc))+Tclado(Tcladind);
+kzirc=(7.51+(0.362e-3*Tclado)-(0.618e-7*Tclado^2)+(0.718e-11*Tclado^3))*10^-3;
+
+Tcladi=(Q*log(roc/ric)/(2*pi()*Lchannel*kzirc))+Tclado;
     
-end
+
 
 %% outer fuel meat temperature
 
-Tfuelo=zeros(1,length(x));
+
 
 dman=ric-(dfuel/2); %m
 
 djump=10e-6; %m
 
 
-for Tfueloind=1:length(x)
-    
-    kgap=0.0476+(0.362e-3*Tcladi(Tfueloind))-(0.618e-7*Tcladi(Tfueloind)^2)+(0.718e-11*Tcladi(Tfueloind)^3)*10^-3; %kW/m.C
 
-    hgap=kgap/(dman+djump);
     
-    Tfuelo(Tfueloind)=(Q(Tfueloind)/(dfuel/2*Lchannel)/hgap)+Tcladi(Tfueloind);
-end
+kgap=0.0476+(0.362e-3*Tcladi)-(0.618e-7*Tcladi^2)+(0.718e-11*Tcladi^3)*10^-3; %kW/m.C
+
+hgap=kgap/(dman+djump);
+    
+Tfuelo=(Q/(dfuel/2*Lchannel)/hgap)+Tcladi;
+
 
 %% Fuel centerline Temperature
 
-Tc=zeros(1,length(x));
 
 divf=1000;
 
-Tfuelmeat=zeros(divf,length(x));
+
 
 rfuel=dfuel/2;
 
-for Tcind=1:length(x)
 
-    reval=linspace(rfuel,0,divf);
 
-    Tfuel=zeros(1,divf);
+reval=linspace(rfuel,0,divf);
 
-    Tfuel(1)=Tfuelo(Tcind);
+Tfuel=zeros(1,divf);
 
-    for pev=2:divf
+Tfuel(1)=Tfuelo;
+
+for pev=2:divf
     
-        Tfuel(pev)=(Qvol(Tcind)/4/kUO2(Tfuel(pev-1))*(reval(pev-1)^2-reval(pev)^2))+Tfuel(pev-1);
-    
-    end
-
-    Tc(Tcind)=Tfuel(divf);
-    
-    Tfuel=reshape(Tfuel,length(Tfuel),1);
-    
-    Tfuelmeat(1:divf,Tcind)=Tfuel;
+    Tfuel(pev)=(Qvol/4/kUO2(Tfuel(pev-1))*(reval(pev-1)^2-reval(pev)^2))+Tfuel(pev-1);
     
 end
+
+Tc=Tfuel(divf);
+
+
+
+Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys];
+
 
 
