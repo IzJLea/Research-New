@@ -515,30 +515,21 @@ for in=1:n
     if x(in)<=0
     
         Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT);
+        
+        alphas(1,in)=0;
     else
-        check=1;
-        eta=1;
-        alpha=x(in);
+       
     
-        while eta>=0.0001
-        
-            xLevy=((alpha*(1-(2*alpha)))+(alpha*sqrt((1-(2*(x(in))))+(alpha*((2*rhovsys/rhofsys*((1-alpha)^2))))+(alpha*(1-(2*alpha))))))/((2*rhovsys/rhofsys*(1-alpha))+(alpha*(1+(2*alpha))));
+    al=(1+(rhovsys/rhofsys*(1-x(in))/x(in)))^-1;
     
-            eta=x(in)-xLevy;
-
-            alpha=alpha-eta;
-        
-        end
-    clear eta
-        LF(in)=((1-x(in))^1.75)/(1-alpha)^2;
     
-        Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT/LF(in));
+    alphas(1,in)=al;
     
-        alphas(in)=alpha;
+    LF=1/(1-al)^1.8;
     
-    clear LF
+    Mchannel(in)=sqrt((Pin-Pout)*rhofsys/reffT/LF);
     
-    clear alpha
+    
     end
     
     

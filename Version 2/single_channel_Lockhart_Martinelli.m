@@ -1,6 +1,6 @@
 %% Single channel function
 
-function Res=single_channel_alt(Qin, Tenter)
+function Res=single_channel_Lockhart_Martinelli(Qin, Tenter)
 
 
 Qchannel=Qin; %MW
@@ -425,6 +425,8 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 
 %Prv=[1.05;1.05;1.07;1.09;1.11;1.15;1.24;1.35;1.49;1.69;1.97;2.43;3.73];
 
+
+
 %% System Properties
 % Compressed water enthalpy 
 
@@ -499,6 +501,8 @@ Dh=0.0074; %m
 
 %Aht=9.1224; %m^2
 
+%Thermal conductivity of coolant
+
 %% Mass flow calculation
 
 Mchannel=sqrt((Pin-Pout)*rhofsys/reffT);
@@ -510,10 +514,21 @@ hout=hin+(Qchannel*1000/Mchannel); %kJ/kg
 x=(hout-hfsys)/(hvsys-hfsys);
 
 rhosys=rhofsys;
+
 if x>0
     
-    al=(1+(rhovsys/rhofsys*(1-x)/x))^-1;
+    PI2=(mulsys/muvsys)^0.2*rhovsys/rhofsys;
     
+    xtt=((1-x)/x)^0.9*PI2^0.5;
+    
+    if xtt<=10
+        
+        al=(1+xtt^0.8)^-0.378;
+    else 
+        
+        al=0.823-(0.157*log(xtt));
+        
+    end
     
     LF=1/(1-al)^1.8;
     
@@ -545,12 +560,6 @@ musys=((x/muvsys)+((1-x)/mulsys)).^(-1);
     
  
 
-% density 
-
-
-
-
-
 
 % Reynold's number calculation
 
@@ -565,17 +574,6 @@ else
     ReynoldsLO=Mchannel*(1-x)*rhofsys*Dh/mulsys;
 end
 
-%% Wall Reynolds
-
-Reynoldswall=Mchannel.*rhosys.*Dh./musys;
-
-%% Volumetric heat generation in fuel
-
-Qvol=Qchannel./Lchannel/pi()/dfuel^2/4*1000;
-
-
-
-
 %% bulk temperature 
 % This is actually the highest fluid temperature reached in the channel,
 % but as there is negligible axial heat transfer this is where the clad and
@@ -587,16 +585,7 @@ Qvol=Qchannel./Lchannel/pi()/dfuel^2/4*1000;
 
 
     
-if x<=0
-        
-    Tbulk=(Qchannel*1000/Mchannel/Cplsys)+Tin;
-        
-else Tbulk=Tsys;
-end
-    
-if Tbulk>Tsys
-    Tbulk=Tsys;
-end
+
 
 
 
@@ -636,6 +625,25 @@ else
         hsys=htpconv;
     end
 end
+
+if x<=0
+        
+    Tbulk=(Qchannel*1000/Mchannel/Cplsys)+Tin;
+        
+else Tbulk=Tsys;
+end
+    
+if Tbulk>Tsys
+    Tbulk=Tsys;
+end
+
+
+%% Volumetric heat generation in fuel
+
+Qvol=Qchannel./Lchannel/pi()/dfuel^2/4*1000;
+
+
+
 
 
 

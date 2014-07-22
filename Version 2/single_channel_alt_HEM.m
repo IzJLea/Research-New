@@ -1,6 +1,6 @@
 %% Single channel function
 
-function Res=single_channel_alt(Qin, Tenter)
+function Res=single_channel_alt_HEM(Qin, Tenter)
 
 
 Qchannel=Qin; %MW

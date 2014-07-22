@@ -1,6 +1,6 @@
 %% Single channel function
 
-function Res=single_channel_alt(Qin, Tenter)
+function Res=single_channel(Qin, Tenter)
 
 
 Qchannel=Qin; %MW
@@ -510,12 +510,23 @@ hout=hin+(Qchannel*1000/Mchannel); %kJ/kg
 x=(hout-hfsys)/(hvsys-hfsys);
 
 rhosys=rhofsys;
+
 if x>0
     
-    al=(1+(rhovsys/rhofsys*(1-x)/x))^-1;
+    PI2=(mulsys/muvsys)^0.2*rhovsys/rhofsys;
     
+    xtt=((1-x)/x)^0.9*PI2^0.5;
     
-    LF=1/(1-al)^1.8;
+    if xtt<=10
+        
+        al=(1+xtt^0.8)^-0.378;
+    else 
+        
+        al=0.823-(0.157*log(xtt));
+        
+    end
+    
+    LF=1/(1-al)^2;
     
     Mchannel=sqrt((Pin-Pout)*rhofsys/reffT/LF);
     
