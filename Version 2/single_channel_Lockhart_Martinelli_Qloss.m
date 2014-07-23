@@ -1,6 +1,7 @@
 %% Single channel function
 
-function Res=single_channel_Lockhart_Martinelli(Qin, Tenter)
+function Res=single_channel_Lockhart_Martinelli_Qloss(Qin, Tenter, Tmod)
+
 
 
 Qchannel=Qin; %MW
@@ -501,16 +502,18 @@ Dh=0.0074; %m
 
 %% Mass flow calculation
 
-Mchannel=sqrt((Pin-Pout)*rhofsys/reffT);
+MchannelLO=sqrt((Pin-Pout)*rhofsys/reffT);
 
 % hout calculation
 
-hout=hin+(Qchannel*1000/Mchannel); %kJ/kg
+hout=hin+(Qchannel*1000/MchannelLO); %kJ/kg
 
 x=(hout-hfsys)/(hvsys-hfsys);
 
 rhosys=rhofsys;
-
+if x<0
+    Mchannel=MchannelLO;
+end
 if x>0
     
     PI2=(mulsys/muvsys)^0.2*rhovsys/rhofsys;
@@ -533,21 +536,6 @@ if x>0
     rhosys=(al)*rhovsys+((1-al)*rhofsys);
 end
 
-
-
-
-
-
-
-
-
-    
-    
-    
-
-
-
-
 %% Determination of system reynolds number
 
 % dynamic viscosity
@@ -569,7 +557,6 @@ if x<=0
 else
     ReynoldsLO=Mchannel*(1-x)*rhofsys*Dh/mulsys;
 end
-
 %% bulk temperature 
 % This is actually the highest fluid temperature reached in the channel,
 % but as there is negligible axial heat transfer this is where the clad and
@@ -577,16 +564,6 @@ end
 % values are found. Tbulk is typically the average temperature but this
 % will not give the highest possible value. heat transfer properties will
 % be calculated at the maximum possible values for the channel (node)
-
-
-
-    
-
-
-
-
-
-    
 hl=0.023*ReynoldsLO.^0.8*Prlsys.^0.4*klsys/Dh;
     
 if x<=0
@@ -632,6 +609,9 @@ end
 if Tbulk>Tsys
     Tbulk=Tsys;
 end
+
+Qloss=Qloss_single_channel(Tbulk,Tmod,hsys);
+
 
 
 %% Volumetric heat generation in fuel
@@ -728,7 +708,7 @@ if x<=0
     al=0;
 end
 
-Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys;al];
+Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys;al;Qloss];
 
 
 

@@ -1,4 +1,13 @@
-function Qloss=Qloss_single_channel(Tbulk,Tmod,hbulk)
+Qin=7.5;
+
+Tenter=267.2;
+
+Tbulk=310.950736486010;
+
+Tmod=60;
+
+hbulk=78000;
+
 %% Initial dimension Definition
 Lchannel=5.94; % m
 
@@ -44,7 +53,7 @@ betamod=[-68.05e-6 -32.74e-6 46.04e-6 114.1e-6 174.0e-6 227.5e-6 276.1e-6 320.6e
 
 % liquid heat capacity
 
-Cpmod=[4.217 4.211 4.198 4.189 4.184 4.181 4.179 4.178 4.178 4.179 4.180 4.182 4.184 4.186 4.188 4.191 4.195 4.199 4.203 4.209 4.214 4.217]./1000;
+Cpmod=[4.217 4.211 4.198 4.189 4.184 4.181 4.179 4.178 4.178 4.179 4.180 4.182 4.184 4.186 4.188 4.191 4.195 4.199 4.203 4.209 4.214 4.217]/1000;
 
 %% System properties
 % pressure tube thermal conductivity
@@ -125,21 +134,3 @@ Tdiff=fzero( fx,50);
 Ts=Tdiff+Tmod;
 
 Qloss=(Tbulk-Ts)/Rtotal/1000000;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
