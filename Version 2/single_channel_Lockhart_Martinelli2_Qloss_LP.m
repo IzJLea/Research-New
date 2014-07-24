@@ -1,6 +1,8 @@
 %% Single channel function
 
-function Res=single_channel_Lockhart_Martinelli_Qloss(Qin, Tenter, Tmod)
+function Res=single_channel_Lockhart_Martinelli_Qloss_LP(Qin, Tenter, Tmod, Pout)
+
+
 
 
 Qchannel=Qin; %MW
@@ -46,7 +48,7 @@ reff=keff.*Rho;
 
 reffT=sum(reff);
 
-Pout=10; %MPa
+
 
 Pin=((Pout*1000)+sum(DP))/1000;  %MPa
 
@@ -296,6 +298,7 @@ hfv=[2.2564e+03
 0];
 
 
+
 % Temp for surface tension
 
 % Tsigma=[190
@@ -512,20 +515,18 @@ if x>0
     
     xtt=((1-x)/x)^0.9*PI2^0.5;
     
-    if xtt<=10
         
         al=(1+xtt^0.8)^-0.378;
-    else 
-        
-        al=0.823-(0.157*log(xtt));
-        
+    
+    if al<=0
+        Mchannel=MchannelLO;
+    else
+        LF=1/(1-al)^1.8;
+    
+        Mchannel=sqrt((Pin-Pout)*rhofsys/reffT/LF);
+    
+        rhosys=(al)*rhovsys+((1-al)*rhofsys);
     end
-    
-    LF=1/(1-al)^1.8;
-    
-    Mchannel=sqrt((Pin-Pout)*rhofsys/reffT/LF);
-    
-    rhosys=(al)*rhovsys+((1-al)*rhofsys);
 end
 
 %% Determination of system reynolds number
@@ -701,7 +702,6 @@ if x<=0
 end
 
 Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys;al;Qloss];
-
 
 
 

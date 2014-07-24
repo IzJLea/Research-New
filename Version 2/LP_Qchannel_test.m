@@ -1,7 +1,8 @@
-%% Single channel function
+Qin=7.5; 
 
-function Res=single_channel_Lockhart_Martinelli_Qloss(Qin, Tenter, Tmod)
+Tenter=267.2;
 
+Tmod=60; 
 
 Qchannel=Qin; %MW
 
@@ -46,7 +47,7 @@ reff=keff.*Rho;
 
 reffT=sum(reff);
 
-Pout=10; %MPa
+Pout=1; %MPa
 
 Pin=((Pout*1000)+sum(DP))/1000;  %MPa
 
@@ -295,6 +296,13 @@ hfv=[2.2564e+03
 443.8000
 0];
 
+% Compressed water Pressures
+
+Pcomp=[5;10;15]; % MPa
+
+% Compressed water enthalpy (10 MPa, 260 C)
+
+hcomp=[1.1349e+03;1.1343e+03;1.5924e3]; %kJ/kg
 
 % Temp for surface tension
 
@@ -701,7 +709,3 @@ if x<=0
 end
 
 Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys;al;Qloss];
-
-
-
-

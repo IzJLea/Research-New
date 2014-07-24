@@ -419,7 +419,13 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 %% System Properties
 % Compressed water enthalpy 
 
-hin=interp1(Tsat,hf,Tin); %kJ/kg
+Tinsat=interp1(Psat,Tsat,Pin);
+
+Cpin=interp1(PCp,Cpl,Pin);
+
+hsatin=interp1(Psat,hf,Pin); %kJ/kg
+
+hin=hsatin-(Cpin*(Tinsat-Tin));
 
 % saturation temperature 
 

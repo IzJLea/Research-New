@@ -1,6 +1,8 @@
 %% Single channel function
 
-function Res=single_channel_Lockhart_Martinelli_Qloss(Qin, Tenter, Tmod)
+function Res=single_channel_Lockhart_Martinelli_Qloss_LP(Qin, Tenter, Tmod, Pout)
+
+
 
 
 Qchannel=Qin; %MW
@@ -46,7 +48,7 @@ reff=keff.*Rho;
 
 reffT=sum(reff);
 
-Pout=10; %MPa
+
 
 Pin=((Pout*1000)+sum(DP))/1000;  %MPa
 
@@ -296,6 +298,7 @@ hfv=[2.2564e+03
 0];
 
 
+
 % Temp for surface tension
 
 % Tsigma=[190
@@ -419,7 +422,13 @@ Prl=[1.09;1.03;0.983;0.947;0.910;0.865;0.836;0.832;0.854;0.902;1.00;1.23;2.06];
 %% System Properties
 % Compressed water enthalpy 
 
-hin=interp1(Tsat,hf,Tin); %kJ/kg
+Tinsat=interp1(Psat,Tsat,Pin);
+
+Cpin=interp1(PCp,Cpl,Pin);
+
+hsatin=interp1(Psat,hf,Pin); %kJ/kg
+
+hin=hsatin-(Cpin*(Tinsat-Tin));
 
 % saturation temperature 
 
@@ -520,12 +529,15 @@ if x>0
         al=0.823-(0.157*log(xtt));
         
     end
+    if al<=0
+        Mchannel=MchannelLO;
+    else
+        LF=1/(1-al)^1.8;
     
-    LF=1/(1-al)^1.8;
+        Mchannel=sqrt((Pin-Pout)*rhofsys/reffT/LF);
     
-    Mchannel=sqrt((Pin-Pout)*rhofsys/reffT/LF);
-    
-    rhosys=(al)*rhovsys+((1-al)*rhofsys);
+        rhosys=(al)*rhovsys+((1-al)*rhofsys);
+    end
 end
 
 %% Determination of system reynolds number
@@ -701,7 +713,6 @@ if x<=0
 end
 
 Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;x;rhosys;al;Qloss];
-
 
 
 
