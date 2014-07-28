@@ -1,18 +1,18 @@
 Qchannel=5:0.1:12;
 
-Results=zeros(10,length(Qchannel));
+Results=zeros(1,length(Qchannel));
 
 Tin=267.2;
 
 Tmod=60; %C
 
-Pout1=10;
+Pout1=10.5;
 
 for resind=1:length(Qchannel)
 
     
 
-    Results(1:10,resind)=single_channel_Lockhart_Martinelli_Qloss_LP(Qchannel(resind),Tin, Tmod, Pout1);
+    Results(1:12,resind)=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM(Qchannel(resind),Tin, Tmod, Pout1);
 end
 
 
