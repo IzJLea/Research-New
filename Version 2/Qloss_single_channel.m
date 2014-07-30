@@ -1,5 +1,6 @@
 function Qloss=Qloss_single_channel(Tbulk,Tmod,hbulk)
 %% Initial dimension Definition
+
 Lchannel=5.94; % m
 
 DPT=103.38e-3; % m
@@ -49,17 +50,17 @@ Cpmod=[4.217 4.211 4.198 4.189 4.184 4.181 4.179 4.178 4.178 4.179 4.180 4.182 4
 %% System properties
 % pressure tube thermal conductivity
 
-kzircPT=(7.51+(0.362e-3*Tbulk)-(0.618e-7*Tbulk^2)+(0.718e-11*Tbulk^3));
+kzircPT=(7.51+(0.362e-3*Tbulk)-(0.618e-7*Tbulk^2)+(0.718e-11*Tbulk^3)); %W/m.K
 
 % calandria tube thermal conductivity
 
-kzircCT=(7.51+(0.362e-3*Tmod)-(0.618e-7*Tmod^2)+(0.718e-11*Tmod^3));
+kzircCT=(7.51+(0.362e-3*Tmod)-(0.618e-7*Tmod^2)+(0.718e-11*Tmod^3));  %W/m.K
 
 % CO2 thermal conductivity
 
-Tsystem=[Tbulk Tmod];
+Tsystem=[Tbulk Tmod]; %C
 
-TevalCO2=mean(Tsystem);
+TevalCO2=mean(Tsystem); %C
 
 kCO2sys=interp1(kCO2Temp,kCO2,TevalCO2);
 
@@ -120,7 +121,7 @@ dT=Tmod-Tbulk;
 
 fx=@(x) (a*x)+(b*x^(n1))+(c*x^(n2))+dT;
 
-Tdiff=fzero( fx,50);
+Tdiff=fzero( fx, 50);
 
 Ts=Tdiff+Tmod;
 
