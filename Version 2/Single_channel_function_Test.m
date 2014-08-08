@@ -40,4 +40,4 @@ end
 % end
 
 
-plot(Results(1,1:length(Qchannel)),Results(2,1:length(Qchannel)),Results2(1,1:length(Qchannel)),Results2(2,1:length(Qchannel)));
+plot(Results(1,1:length(Qchannel)),Results(2,1:length(Qchannel)));

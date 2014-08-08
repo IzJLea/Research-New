@@ -1,6 +1,6 @@
 %% Single channel function
 
-function Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM4(Qin, Tenter, Tmod, Pout)
+function Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qin, Tenter, Tmod, Pout)
 
 
 
@@ -377,7 +377,7 @@ TICT=TOPT-(Qlossval*1000000*R3);
 
 TOCT=TICT-(Qlossval*1000000*R4);
 
-Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;TOPT;TOCT;x;rhosys;al;Qlossval];
+Res=[Qin;Mchannel;Tclado;Tcladi;Tfuelo;Tc;TOPT;TOCT;x;rhosys;al;Tbulk];
 
 
 
