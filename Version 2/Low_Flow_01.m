@@ -3,7 +3,7 @@
 
 Qchannel=.150; %MW
 
-H=0; %m
+H=1; %m
 
 Tenter=100; %C
 
@@ -13,7 +13,13 @@ PVH=114; %kPa
 
 Peval=(PSH)/100;
 
+Tmod=60; %C
 
+Aflow=0.0035; %m^2
+
+Dh=0.0074; %m
+
+DPT=0.10338;
 
 %% delta P calculation
 
@@ -131,8 +137,83 @@ for m=1:length(Tvap)
     
 end
 
+Atr=2;
+    
+Ar=alpha*2;
+    
+Ainr=Atr-Ar;
+    
+xflow=acos(Ainr-1);
+    
+if xflow>pi()/2
+    
+        theta=asin(sin(xflow)/(pi()/2));
+        
+else if xflow==pi()/2;
+            
+        theta=pi()/2;
+            
+    else
+        theta=(pi()/2)+asin(sin(xflow)/(pi()/2));
+    end
+end
+        
+
+    
+    thetapipe=2*theta;
+    
+    Dflow=8*Aflow*alpha/thetapipe/DPT;
+
+%% vapor heat transfer coefficient for each bundle
+
+mbundle=zeros(1,length(Qbundle));
+
+vsteam=zeros(1,length(Qbundle));
+
+htfe=zeros(1,length(Qbundle));
+
+Reysteamf=zeros(1,length(Qbundle));
+
+Reysteampt=zeros(1,length(Qbundle));
+
+for n=1:length(Qbundle);
+    
+    mbundle(n)=Qtotal(n)/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
+    
+    vsteam(n)=mbundle(n)/XSteam('rhoV_p',Peval)*Aflow*alpha;
+    
+    Reysteamf(n)=mbundle(n)*XSteam('rho_pT',Peval,Tvap(n))*Dh/XSteam('my_pT',Peval,Tvap(n));
+    
+      
+      
+    
+    Reysteampt(n)=mbundle(n)*XSteam('rho_pT',Peval,Tvap(n))*Dflow*alpha/XSteam('my_pT',Peval,Tvap(n));
+    
+    %htfe(n)=
+end
+
+
+
+
 plotyy(1:12,Tvap,1:12,Qtotal,'plot','plot');
 
+Trun=600; %s
+
+Tr=0:0.01:Trun;
+
+Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qchannel,Tenter,Tmod,PVH/1000);
+
+TFs=zeros(length(Qbundle),length(Tr));
+
+TPt=zeros(length(Qbundle),length(Tr));
+
+TCt=zeros(length(Qbundle),length(Tr));
+
+TFs(1:length(Qbundle),1)=Res(3,1);
+
+TPt(1:length(Qbundle),1)=Res(7,1);
+
+TCt(1:length(Qbundle),1)=Res(8,1);
 
 
 
