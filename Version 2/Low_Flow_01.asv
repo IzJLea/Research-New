@@ -244,7 +244,7 @@ CPpt=CPfst;
 
 CPct=(255.66+(0.1024*(Tmod+273.15)));
 
-%plotyy(1:12,Tvap,1:12,Qtotal,'plot','plot');
+plotyy(1:12,Tvap,1:12,Qtotal,'plot','plot');
 
 Trun=600; %s
 
@@ -272,11 +272,10 @@ for tind=2:length(Tr)
         
         gamf=(htfe(1,bundind)*pi()*dfuel*Lchannel)/(Mfst*alpha*CPfst);
         
-        TFs(tind,bundind)=Tfinf-exp(-gamf*Tr(tind));
+        TFs(tind,bundind)=Tfinf-e^(-gamf*Tr(tind));
     end
 end
 
-plot(Tr,TFs);
 
 
 
