@@ -212,9 +212,9 @@ for n=1:length(Qbundle);
     
     Nupt(n)=0.023*Reysteampt(n)^(4/5)*Prgsys(n)^0.3;
     
-    htfe(n)=Nuf(n)*XSteam('tc_pT',Peval,Tvap(n))/Dh; %fue-sheath ht coefficient
+    htfe(n)=Nuf(n)*XSteam('tc_pT',Peval,Tvap(n))/Dh/1000; %fue-sheath ht coefficient
     
-    htpt(n)=Nupt(n)*XSteam('tc_pT',Peval,Tvap(n))/Dflow; %steam-pt ht coefficient
+    htpt(n)=Nupt(n)*XSteam('tc_pT',Peval,Tvap(n))/Dflow/1000; %steam-pt ht coefficient
     
     Tave=(Tvap(n)+Tmod)/2;
     
@@ -238,11 +238,11 @@ MPT=pi()/4*(((DPT+(2*tPT))^2)-(DPT^2))*Lchannel*rhoPTclad;
 
 MCT=pi()/4*(((DCT+(2*tCT))^2)-(DCT^2))*Lchannel*rhoCT;
 
-CPfst=(255.66+(0.1024*(mean(Tvap)+273.15)));
+CPfst=(255.66+(0.1024*(mean(Tvap)+273.15)))/1000;
 
 CPpt=CPfst;
 
-CPct=(255.66+(0.1024*(Tmod+273.15)));
+CPct=(255.66+(0.1024*(Tmod+273.15)))/1000;
 
 %plotyy(1:12,Tvap,1:12,Qtotal,'plot','plot');
 
@@ -258,26 +258,25 @@ TPt=zeros(length(Qbundle),length(Tr));
 
 TCt=zeros(length(Qbundle),length(Tr));
 
-TFs(1:length(Qbundle),1)=Res(3,1);
+TFs(1:length(Tvap),1)=Tvap';
 
-TPt(1:length(Qbundle),1)=Res(7,1);
+TPt(1:length(Tvap),1)=Tvap';
 
-TCt(1:length(Qbundle),1)=Res(8,1);
-
-for tind=2:length(Tr)
+for ind=2:length(Tr)
     
     for bundind=1:length(Qbundle)
         
-        Tfinf=(Qel(1,bundind)+(htfe(1,bundind)*pi()*dfuel*Lchannel*Tvap(bundind)))/(htfe(1,bundind)*pi()*dfuel*Lchannel);
+        Tfinf=((Qel(bundind)*1000)+(htfe(bundind)*pi()*dfuel*Lchannel*Tvap(bundind)))/(htfe(bundind)*Lchannel*pi()*dfuel);
         
-        gamf=(htfe(1,bundind)*pi()*dfuel*Lchannel)/(Mfst*alpha*CPfst);
+        gammf=htfe(bundind)*pi()*dfuel*Lchannel/(pi()/4*(dfuel^2-((dfuel-(2*tclad))^2))*Lchannel*CPfst);
         
-        TFs(tind,bundind)=Tfinf-exp(-gamf*Tr(tind));
+        C1=Tfinf-Tvap(bundind)-1;
+        
+        TFs(bundind,ind)=Tfinf-exp(-gammf*Tr(ind))-C1;
+        
     end
 end
-
-plot(Tr,TFs);
-
-
+        
+plot(Tr, TFs(12,1:length(Tr)));
 
 
