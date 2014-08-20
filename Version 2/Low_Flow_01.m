@@ -3,15 +3,15 @@
 
 Qchannel=.150; %MW
 
-H=1; %m
+H=0; %m
 
 Tenter=100; %C
 
-PSH=134; %kPa
+PSH=210; %kPa
 
-PVH=114; %kPa
+PVH=190; %kPa
 
-Peval=(PSH)/100;
+Peval=(PSH+PVH)/2/100;
 
 Tmod=60; %C
 
@@ -81,7 +81,7 @@ x=(XSteam('h_pT',Peval,Tenter)-XSteam('hL_p',Peval))/(XSteam('hV_p',Peval)-XStea
 
 wsmx=Qchannel*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
 
-d=0.001; %dampening factor
+d=0.01; %dampening factor
 
 delta=0.1;
 
@@ -246,7 +246,7 @@ CPct=(255.66+(0.1024*(Tmod+273.15)))/1000;
 
 %plotyy(1:12,Tvap,1:12,Qtotal,'plot','plot');
 
-Trun=600; %s
+Trun=500; %s
 
 Tr=0:0.1:Trun;
 
@@ -277,6 +277,6 @@ for ind=2:length(Tr)
     end
 end
         
-plot(Tr, TFs(12,1:length(Tr)));
+plot(1:12, TFs(1:12,length(Tr)));
 
 
