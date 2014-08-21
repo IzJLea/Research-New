@@ -176,9 +176,9 @@ end
 
 Trun=500; %run time
 
-divt=1; %time step
+divt=0.01; %time step
 
-time=0:divt:500;
+time=0:divt:Trun;
 
 vbund=zeros(length(Qbundle),length(time));
 
@@ -188,29 +188,54 @@ Tvapt=zeros(length(Qbundle),length(time));
 
 hvapt=zeros(length(Qbundle),length(time));
 
+hsatv=XSteam('hV_p',Peval);
+
+h1=zeros(length(Qbundle),length(time));
+
 hevap=XSteam('hV_p',Peval)-XSteam('hL_p',Peval);
 
 hin=zeros(length(Qbundle),length(time));
 
-for n=1:length(Qbundle)
+T1=zeros(length(Qbundle),length(time));
+
+Tvapt(1:length(Qbundle),1)=XSteam('Tsat_p',Peval);
+
+hin(1,1:length(time))=0;
+
+hin(2:length(Qbundle),1)=XSteam('hV_p',Peval);
+
+
+for h1start=1:length(Qbundle)
     
-    Tfs(n,1)=XSteam('Tsat_p',Peval);
+    h1(h1start,1)=(min(1)/mbundle(1)*hin(1,1))+(mchange(1)/mbundle(1)*XSteam('hV_p',Peval));
     
-    Tvapt(n,1)=XSteam('Tsat_p',Peval);
+    T1(h1start,1)=XSteam('T_ph',Peval,h1(h1start,1));
     
-    hvapt(n,1)=XSteam('hV_p',Peval);
-    
-       
+    Tvapt(h1start,1)=T1(h1start,1)+(Qbundle(h1start)*alpha*1000/mbundle(h1start)/XSteam('Cp_ph',Peval,h1(h1start,1)));
 end
 
+
 for tind=2:length(time)
-    
     for bundind=1:length(Qbundle)
+        hin(bundind,tind)=XSteam('h_pT',Peval,Tvapt(bundind,tind-1));
+        h1(bundind,tind)=(min(bundind)/mbundle(bundind)*hin(bundind,tind))+(mchange(bundind)/mbundle(bundind)*hsatv);
+        T1(bundind,tind)=XSteam('T_ph',Peval,h1(bundind,tind));
+        Tvapt(bundind,tind)=T1(bundind,tind)+(Qbundle(bundind)*alpha*1000/mbundle(bundind)/XSteam('Cp_ph',Peval,h1(bundind,tind)));
+    end
+end
+
+plot(time,Tvapt);
+
+% hin(1,1:length(time))=0;
+% 
+% hin(2:length(Qbundle),1)=XSteam('hV_p',Peval);
+
+% for tind=2:length(time)
+%     
+%     for bundind=1:length(Qbundle)
         
-        if bundind==1
-            
-            hvapt(bundind,tind)=(Qbundle(bundind)*1000*alpha/mbundle)+;
-        
+      
+
 
 
 
