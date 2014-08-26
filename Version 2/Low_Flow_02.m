@@ -39,6 +39,8 @@ djump=10e-6; %m
 
 Lchannel=5.94; %m
 
+Lbund=Lchannel/12;
+
 tPT=0.00424;
 
 tCT=0.0014;
@@ -174,9 +176,9 @@ for m=1:length(Tvap)
     
 end
 
-Trun=500; %run time
+Trun=1000; %run time
 
-divt=0.01; %time step
+divt=0.05; %time step
 
 time=0:divt:Trun;
 
@@ -204,6 +206,15 @@ hin(1,1:length(time))=0;
 
 hin(2:length(Qbundle),1)=XSteam('hV_p',Peval);
 
+Tfc=zeros(length(Qbundle),length(time));
+
+Reysc=zeros(length(Qbundle),length(time));
+
+Nusc=zeros(length(Qbundle),length(time));
+
+hsc=zeros(length(Qbundle),length(time));
+
+
 
 for h1start=1:length(Qbundle)
     
@@ -212,7 +223,12 @@ for h1start=1:length(Qbundle)
     T1(h1start,1)=XSteam('T_ph',Peval,h1(h1start,1));
     
     Tvapt(h1start,1)=T1(h1start,1)+(Qbundle(h1start)*alpha*1000/mbundle(h1start)/XSteam('Cp_ph',Peval,h1(h1start,1)));
+    
 end
+
+rhoclad=6595.2-(0.1477*(Tvapt(1,1)+273.15));
+
+Mclad=(dfuel^2-(dfuel-(2*tclad))^2)*pi()/4*Lbund*rhoclad;
 
 
 for tind=2:length(time)
@@ -224,7 +240,25 @@ for tind=2:length(time)
     end
 end
 
-plot(time,Tvapt);
+for tc=1:length(time)
+    for bc=1:length(Qbundle)
+        vbund(bc,tc)=mbundle(bc)/XSteam('rho_pT',Peval,Tvapt(bc,tc))/(Aflow*alpha);
+        Reysc(bc,tc)=vbund(bc,tc)*Dh*XSteam('rho_pT',Peval,Tvapt(bc,tc))/XSteam('my_pT',Peval,Tvapt(bc,tc));
+        Nusc(bc,tc)=0.023*(Reysc(bc,tc))^(4/5)*((XSteam('Cp_pT',Peval,Tvapt(bc,tc))*XSteam('my_pT',Peval,Tvapt(bc,tc))/XSteam('tc_pT',Peval,Tvapt(bc,tc)))^0.4);
+        hsc(bc,tc)=Nusc(bc,tc)*XSteam('tc_pT',Peval,Tvapt(bc,tc))/Dh;
+        Tfinf=((Qbundle(bc)/37)+(hsc(bc,tc)*Lbund*pi()*dfuel*Tvapt(bc,tc)))/(hsc(bc,tc)*Lbund*pi()*dfuel);
+        lamf=(hsc(bc,tc)*Lbund*pi()*dfuel)/(Mclad*((255.66+(0.1024*(Tvapt(bc,tc)+273.15)))/1000));
+        if tc==1
+            Tfc(bc,tc)=Tvapt(bc,tc);
+        else
+            Tfc(bc,tc)=Tfc(bc,tc-1)+(lamf*(Tfinf-Tfc(bc,tc-1))*divt);
+        end
+    end
+end
+
+
+
+plot(time,Tfc);
 
 % hin(1,1:length(time))=0;
 % 
