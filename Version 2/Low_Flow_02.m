@@ -44,6 +44,14 @@ Lbund=Lchannel/12;
 tPT=0.00424;
 
 tCT=0.0014;
+
+Aipt=pi()*DPT*Lbund;
+
+Aopt=pi()*(DPT+(2*tPT))*Lbund;
+
+Aict=pi()*DCT*Lbund;
+
+Aoct=pi()*(DCT+(2*tCT))*Lbund;
 %% delta P calculation
 
 deltaP=(PSH)-PVH+((9.81*H*(XSteam('rhoL_p',Peval)-XSteam('rhoV_p',Peval)))/1000);
@@ -58,7 +66,9 @@ DP = [165;
 
 
 
+kCO2=[14.60e-3 16.23e-3 17.87e-3 19.52e-3 21.18e-3 22.84e-3 27.00e-3 31.12e-3 35.20e-3 39.23e-3];
 
+kCO2Temp=[0 20 40 60 80 100 150 200 250 300];
 %% calculate values for k for each section
 
 %reference mass flowrate
@@ -167,18 +177,18 @@ for m=1:length(Tvap)
     hvap(m)=(alpha*Qtotal(m)*1000/wv)+hg;
     
     Tvap(m)=XSteam('T_ph',Peval,hvap(m));
-    
-    mbundle(m)=sum(mbundle(1:m))+((1-alpha)*Qbundle(m)*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
-    
+         
     mchange(m)=((1-alpha)*Qbundle(m)*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
+    
+    mbundle(m)=sum(mchange(1:m));
     
     min(m)=mbundle(m)-mchange(m);
     
 end
 
-Trun=1000; %run time
+Trun=500; %run time
 
-divt=0.05; %time step
+divt=1; %time step
 
 time=0:divt:Trun;
 
@@ -200,6 +210,10 @@ hin=zeros(length(Qbundle),length(time));
 
 T1=zeros(length(Qbundle),length(time));
 
+Tfinf=zeros(length(Qbundle),length(time));
+
+Tpinf=zeros(length(Qbundle),length(time));
+
 Tvapt(1:length(Qbundle),1)=XSteam('Tsat_p',Peval);
 
 hin(1,1:length(time))=0;
@@ -213,6 +227,23 @@ Reysc=zeros(length(Qbundle),length(time));
 Nusc=zeros(length(Qbundle),length(time));
 
 hsc=zeros(length(Qbundle),length(time));
+
+Reyps=zeros(length(Qbundle),length(time));
+
+Nups=zeros(length(Qbundle),length(time));
+
+hcp=zeros(length(Qbundle),length(time));
+
+hcc=zeros(length(Qbundle),length(time));
+
+Tpt=zeros(length(Qbundle),length(time));
+
+Tct=zeros(length(Qbundle),length(time));
+
+Afuel=Lbund*pi()*doutclad;
+
+Apt=Lbund*pi()*DPT;
+Apto=Lbund*pi()*(DPT+(2*tPT));
 
 
 
@@ -232,31 +263,85 @@ Mclad=(dfuel^2-(dfuel-(2*tclad))^2)*pi()/4*Lbund*rhoclad;
 
 
 for tind=2:length(time)
+    
     for bundind=1:length(Qbundle)
+        
         hin(bundind,tind)=XSteam('h_pT',Peval,Tvapt(bundind,tind-1));
+        
         h1(bundind,tind)=(min(bundind)/mbundle(bundind)*hin(bundind,tind))+(mchange(bundind)/mbundle(bundind)*hsatv);
+        
         T1(bundind,tind)=XSteam('T_ph',Peval,h1(bundind,tind));
+        
         Tvapt(bundind,tind)=T1(bundind,tind)+(Qbundle(bundind)*alpha*1000/mbundle(bundind)/XSteam('Cp_ph',Peval,h1(bundind,tind)));
     end
 end
 
 for tc=1:length(time)
     for bc=1:length(Qbundle)
+        
         vbund(bc,tc)=mbundle(bc)/XSteam('rho_pT',Peval,Tvapt(bc,tc))/(Aflow*alpha);
+        
         Reysc(bc,tc)=vbund(bc,tc)*Dh*XSteam('rho_pT',Peval,Tvapt(bc,tc))/XSteam('my_pT',Peval,Tvapt(bc,tc));
+        
         Nusc(bc,tc)=0.023*(Reysc(bc,tc))^(4/5)*((XSteam('Cp_pT',Peval,Tvapt(bc,tc))*XSteam('my_pT',Peval,Tvapt(bc,tc))/XSteam('tc_pT',Peval,Tvapt(bc,tc)))^0.4);
-        hsc(bc,tc)=Nusc(bc,tc)*XSteam('tc_pT',Peval,Tvapt(bc,tc))/Dh;
-        Tfinf=((Qbundle(bc)/37)+(hsc(bc,tc)*Lbund*pi()*dfuel*Tvapt(bc,tc)))/(hsc(bc,tc)*Lbund*pi()*dfuel);
-        lamf=(hsc(bc,tc)*Lbund*pi()*dfuel)/(Mclad*((255.66+(0.1024*(Tvapt(bc,tc)+273.15)))/1000));
-        if tc==1
-            Tfc(bc,tc)=Tvapt(bc,tc);
-        else
-            Tfc(bc,tc)=Tfc(bc,tc-1)+(lamf*(Tfinf-Tfc(bc,tc-1))*divt);
-        end
+        
+        hsc(bc,tc)=Nusc(bc,tc)*XSteam('tc_pT',Peval,Tvapt(bc,tc))/Dh/1000;
+        
+        Tfinf(bc,tc)=((Qbundle(bc)/37)+(hsc(bc,tc)*Lbund*pi()*doutclad*Tvapt(bc,tc)))/(hsc(bc,tc)*Lbund*pi()*doutclad);
+        
+        lamf=(hsc(bc,tc)*Lbund*pi()*doutclad)/(Mclad*((255.66+(0.1024*(Tvapt(bc,tc)+273.15)))/1000));
+        
+        Reyps(bc,tc)=vbund(bc,tc)*DPT*XSteam('rho_pT',Peval,Tvapt(bc,tc))/XSteam('my_pT',Peval,Tvapt(bc,tc));
+        
+        Nups(bc,tc)=0.023*(Reyps(bc,tc))^(4/5)*((XSteam('Cp_pT',Peval,Tvapt(bc,tc))*XSteam('my_pT',Peval,Tvapt(bc,tc))/XSteam('tc_pT',Peval,Tvapt(bc,tc)))^0.4);
+        
+        hcp(bc,tc)=Nusc(bc,tc)*XSteam('tc_pT',Peval,Tvapt(bc,tc))/DPT/1000;
+        
+        
+        
+        %Tpinf(bc,tc)=()/()
+        
     end
 end
 
-
+for td=1:length(time)
+    for bd=1:length(Qbundle)
+        if td==1
+            Tfc(bd,td)=Tvapt(bd,td);
+        else
+            Tfc(bd,td)=Tfc(bd,td-1)+(lamf*(Tfinf(bd,length(time))-Tfc(bd,td-1))*divt);
+            
+            
+            
+        end
+        Reyps(bd,td)=vbund(bd,td)*DPT*XSteam('rho_pT',Peval,Tvapt(bd,td))/XSteam('my_pT',Peval,Tvapt(bd,td));
+        
+        Nups(bd,td)=0.023*(Reyps(bd,td))^(4/5)*((XSteam('Cp_pT',Peval,Tvapt(bd,td))*XSteam('my_pT',Peval,Tvapt(bd,td))/XSteam('tc_pT',Peval,Tvapt(bd,td)))^0.4);
+        
+        hcp(bd,td)=Nusc(bd,td)*XSteam('tc_pT',Peval,Tvapt(bd,td))/DPT/1000;
+        
+        if td==1
+            
+            ho=1000; %W/mK
+            Qloss=Qloss_single_channel2(Tvapt(bd,td),Tmod,hcp(bd,td)*1000,ho, Lbund);
+            kzrct=(7.51+(0.362e-3*Tmod)-(0.618e-7*Tmod^2)+(0.718e-11*Tmod^3))/1000;  %kW/m.K
+            
+            kco2=interp1(kCO2Temp,kCO2,(mean(Tvapt(bd,td),Tmod)))/1000;
+            kzrpt=(7.51+(0.362e-3*Tvapt(bd,td))-(0.618e-7*Tvapt(bd,td)^2)+(0.718e-11*Tvapt(bd,td)^3))/1000;
+            Tsurfpt=(Qloss*1000/hcp(bd,td)/Aipt)+Tvapt(bd,td);
+            Topt=(Qloss*1000*tPT/kzrpt/Aopt)+Tsurfpt;
+            Tict=(Qloss*1000*(DCT-(DPT+(2*tPT)))/kco2/Aict)+Topt;
+            Toct=(Qloss*1000*tCT/kzrct/Aoct)+Tict;
+            
+            Tpt(bd,td)=mean(Tsurfpt,Topt);
+            
+            Tct(bd,td)=mean(Tict,Toct);
+        else
+            
+        end
+        
+    end
+end
 
 plot(time,Tfc);
 
@@ -271,6 +356,6 @@ plot(time,Tfc);
       
 
 
-
+kCO2Temp=1;
 
 

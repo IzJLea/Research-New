@@ -1,7 +1,6 @@
-function Qloss=Qloss_single_channel(Tbulk,Tmod,hbulk)
+function Qloss=Qloss_single_channel(Tbulk,Tmod,hbulk,Lbund)
 %% Initial dimension Definition
 
-Lchannel=5.94; % m
 
 DPT=103.38e-3; % m
 
@@ -97,15 +96,15 @@ rict=DCT/2;
 
 roct=rict+tCT;
 
-Rtotal=(1/(hbulk*DPT*pi()))+(log(ropt/ript)/(2*pi()*kzircPT*Lchannel))+(log(rict/ropt)/(2*pi()*kCO2sys*Lchannel))+(log(roct/rict)/(2*pi()*kzircCT*Lchannel));
+Rtotal=(1/(hbulk*DPT*pi()))+(log(ropt/ript)/(2*pi()*kzircPT*Lbund))+(log(rict/ropt)/(2*pi()*kCO2sys*Lbund))+(log(roct/rict)/(2*pi()*kzircCT*Lbund));
 
-A=kmodsys*pi()*Rtotal*Lchannel;
+A=kmodsys*pi()*Rtotal*Lbund;
 
 B=0.60;
 
 C=0.387/(1+((0.559/Prlmodsys)^(9/16)))^(8/27);
 
-D=9.81*betamodsys*Lchannel^3*Cpmodsys/mumodsys/kmodsys;
+D=9.81*betamodsys*Lbund^3*Cpmodsys/mumodsys/kmodsys;
 
 a=(A*B^2)+1;
 

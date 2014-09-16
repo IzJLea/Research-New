@@ -1,7 +1,7 @@
-function Qloss=Qloss_single_channel2(Tbulk,Tmod,hbulk,hmod)
+function Qloss=Qloss_single_channel2(Tbulk,Tmod,hbulk,hmod,Lbund)
 %% Initial dimension Definition
 
-Lchannel=5.94; % m
+Lchannel=Lbund; % m
 
 DPT=0.10338;
 
@@ -19,14 +19,24 @@ rict=DCT/2;
 
 roct=rict+tCT;
 
+Tsystem=[Tbulk Tmod]; %C
+
+TevalCO2=mean(Tsystem); %C
+
+Tbulk=Tbulk+273.15;
+
+
+
+Tmod=Tmod+273.15;
+
 %% System properties
 % pressure tube thermal conductivity
 
-kzircPT=(7.51+(0.362e-3*Tbulk)-(0.618e-7*Tbulk^2)+(0.718e-11*Tbulk^3)); %W/m.K
+kzircPT=12.767-(5.4348e-4*Tbulk)+(8.9818e-6*Tbulk^2); %W/m.K
 
 % calandria tube thermal conductivity
 
-kzircCT=(7.51+(0.362e-3*Tmod)-(0.618e-7*Tmod^2)+(0.718e-11*Tmod^3));  %W/m.K
+kzircCT=12.767-(5.4348e-4*Tbulk)+(8.9818e-6*Tbulk^2);  %W/m.K
 
 % CO2 thermal conductivity
 
@@ -37,10 +47,6 @@ kCO2=[14.60e-3 16.23e-3 17.87e-3 19.52e-3 21.18e-3 22.84e-3 27.00e-3 31.12e-3 35
 kCO2Temp=[0 20 40 60 80 100 150 200 250 300];
 
 % CO2 thermal conductivity
-
-Tsystem=[Tbulk Tmod]; %C
-
-TevalCO2=mean(Tsystem); %C
 
 kCO2sys=interp1(kCO2Temp,kCO2,TevalCO2);
 
