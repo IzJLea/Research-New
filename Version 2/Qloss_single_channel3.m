@@ -64,9 +64,9 @@ R5=1/(hmod*DCT*pi()*Lchannel);
 
 Rtotal=R1+R2+R3+R4+R5;
 
-Qlossval=(Tbulk-Tmod)/Rtotal;
+Qlossval=(Tbulk-Tmod)/Rtotal/1000000;
 
-Qloss=[Qlossval R1 R2 R3 R4 R5 Rtotal];
+Qloss=Qlossval;
 
 
 

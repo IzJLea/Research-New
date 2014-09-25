@@ -304,46 +304,46 @@ for tc=1:length(time)
     end
 end
 
-for td=1:length(time)
-    for bd=1:length(Qbundle)
-        if td==1
-            Tfc(bd,td)=Tvapt(bd,td);
-        else
-            Tfc(bd,td)=Tfc(bd,td-1)+(lamf*(Tfinf(bd,length(time))-Tfc(bd,td-1))*divt);
-            
-            
-            
-        end
-        Reyps(bd,td)=vbund(bd,td)*DPT*XSteam('rho_pT',Peval,Tvapt(bd,td))/XSteam('my_pT',Peval,Tvapt(bd,td));
-        
-        Nups(bd,td)=0.023*(Reyps(bd,td))^(4/5)*((XSteam('Cp_pT',Peval,Tvapt(bd,td))*XSteam('my_pT',Peval,Tvapt(bd,td))/XSteam('tc_pT',Peval,Tvapt(bd,td)))^0.4);
-        
-        hcp(bd,td)=Nusc(bd,td)*XSteam('tc_pT',Peval,Tvapt(bd,td))/DPT/1000;
-        
-        if td==1
-            
-            ho=1000; %W/mK
-            Qloss=Qloss_single_channel2(Tvapt(bd,td),Tmod,hcp(bd,td)*1000,ho, Lbund);
-            kzrct=(7.51+(0.362e-3*Tmod)-(0.618e-7*Tmod^2)+(0.718e-11*Tmod^3))/1000;  %kW/m.K
-            
-            kco2=interp1(kCO2Temp,kCO2,(mean(Tvapt(bd,td),Tmod)))/1000;
-            kzrpt=(7.51+(0.362e-3*Tvapt(bd,td))-(0.618e-7*Tvapt(bd,td)^2)+(0.718e-11*Tvapt(bd,td)^3))/1000;
-            Tsurfpt=(Qloss*1000/hcp(bd,td)/Aipt)+Tvapt(bd,td);
-            Topt=(Qloss*1000*tPT/kzrpt/Aopt)+Tsurfpt;
-            Tict=(Qloss*1000*(DCT-(DPT+(2*tPT)))/kco2/Aict)+Topt;
-            Toct=(Qloss*1000*tCT/kzrct/Aoct)+Tict;
-            
-            Tpt(bd,td)=mean(Tsurfpt,Topt);
-            
-            Tct(bd,td)=mean(Tict,Toct);
-        else
-            
-        end
-        
-    end
-end
+% for td=1:length(time)
+%     for bd=1:length(Qbundle)
+%         if td==1
+%             Tfc(bd,td)=Tvapt(bd,td);
+%         else
+%             Tfc(bd,td)=Tfc(bd,td-1)+(lamf*(Tfinf(bd,length(time))-Tfc(bd,td-1))*divt);
+%             
+%             
+%             
+%         end
+%         Reyps(bd,td)=vbund(bd,td)*DPT*XSteam('rho_pT',Peval,Tvapt(bd,td))/XSteam('my_pT',Peval,Tvapt(bd,td));
+%         
+%         Nups(bd,td)=0.023*(Reyps(bd,td))^(4/5)*((XSteam('Cp_pT',Peval,Tvapt(bd,td))*XSteam('my_pT',Peval,Tvapt(bd,td))/XSteam('tc_pT',Peval,Tvapt(bd,td)))^0.4);
+%         
+%         hcp(bd,td)=Nusc(bd,td)*XSteam('tc_pT',Peval,Tvapt(bd,td))/DPT/1000;
+%         
+%         if td==1
+%             
+%             ho=1000; %W/mK
+%             Qloss=Qloss_single_channel2(Tvapt(bd,td),Tmod,hcp(bd,td)*1000,ho, Lbund);
+%             kzrct=(7.51+(0.362e-3*Tmod)-(0.618e-7*Tmod^2)+(0.718e-11*Tmod^3))/1000;  %kW/m.K
+%             
+%             kco2=interp1(kCO2Temp,kCO2,(mean(Tvapt(bd,td),Tmod)))/1000;
+%             kzrpt=(7.51+(0.362e-3*Tvapt(bd,td))-(0.618e-7*Tvapt(bd,td)^2)+(0.718e-11*Tvapt(bd,td)^3))/1000;
+%             Tsurfpt=(Qloss*1000/hcp(bd,td)/Aipt)+Tvapt(bd,td);
+%             Topt=(Qloss*1000*tPT/kzrpt/Aopt)+Tsurfpt;
+%             Tict=(Qloss*1000*(DCT-(DPT+(2*tPT)))/kco2/Aict)+Topt;
+%             Toct=(Qloss*1000*tCT/kzrct/Aoct)+Tict;
+%             
+%             Tpt(bd,td)=mean(Tsurfpt,Topt);
+%             
+%             Tct(bd,td)=mean(Tict,Toct);
+%         else
+%             
+%         end
+%         
+%     end
+% end
 
-plot(time,Tfc);
+plot(time,Tvapt);
 
 % hin(1,1:length(time))=0;
 % 

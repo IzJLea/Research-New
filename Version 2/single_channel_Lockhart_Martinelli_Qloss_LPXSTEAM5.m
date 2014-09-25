@@ -1,6 +1,6 @@
 %% Single channel function
 
-function Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qin, Tenter, Tmod, Pout)
+function Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qin, Tenter, Tmod, Pout,Lbund)
 
 
 
@@ -269,7 +269,7 @@ Nuouter=0.023*Reouter^0.8*Prlsys^0.3;
 
 houter=Nuouter*klsys/Lchannel;
 
-Qloss=Qloss_single_channel2(Tbulk,Tmod,houter,hmod);
+Qloss=Qloss_single_channel2(Tbulk,Tmod,houter,hmod,Lbund);
 
 
 

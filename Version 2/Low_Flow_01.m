@@ -250,7 +250,7 @@ Trun=500; %s
 
 Tr=0:0.1:Trun;
 
-Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qchannel,Tenter,Tmod,PVH/1000);
+Res=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qchannel,Tenter,Tmod,PVH/1000,Lbund);
 
 TFs=zeros(length(Qbundle),length(Tr));
 
@@ -277,6 +277,6 @@ for ind=2:length(Tr)
     end
 end
         
-plot(1:12, TFs(1:12,length(Tr)));
+plot(time,TFs);
 
 
