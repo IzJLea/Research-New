@@ -8,15 +8,17 @@ Tin=267.2;
 
 Tmod=60; %C
 
+Lbund=0.5;
+
 Pout1=10;
 
 for resind=1:length(Qchannel)
 
     
 
-    Results(1:12,resind)=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM4(Qchannel(resind),Tin, Tmod, Pout1);
+    %Results(1:12,resind)=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM4(Qchannel(resind),Tin, Tmod, Pout1);
     
-    Results2(1:12,resind)=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qchannel(resind),Tin, Tmod, Pout1);
+    Results2(1:12,resind)=single_channel_Lockhart_Martinelli_Qloss_LPXSTEAM5(Qchannel(resind),Tin, Tmod, Pout1, Lbund);
 end
 
 
@@ -44,4 +46,4 @@ end
 % end
 
 
-plot(Results(1,1:length(Qchannel)),Results(2,1:length(Qchannel)),Results2(1,1:length(Qchannel)),Results2(2,1:length(Qchannel)));
+plot(Results2(1,1:length(Qchannel)),Results2(2,1:length(Qchannel)));

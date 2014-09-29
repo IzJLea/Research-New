@@ -174,6 +174,10 @@ Qbundle(1,7)=Qbundle(1,6);
 
 Qtotal=zeros(1,12);
 
+Qel=Qbundle./37;
+
+Qvol=Qel./(pi()/4*(dfuel^2)*Lbund);
+
 for l=1:length(Qtotal)
     
     Qtotal(l)=sum(Qbundle(1:l));
@@ -229,7 +233,7 @@ Lrun=100; %length of run (s)
 
 dt=0.1; %time division
 
-damp=0.005;
+divf=10000;
                     
 time=zeros(1,Lrun/dt);
 
@@ -237,60 +241,83 @@ for tt=2:length(time)
     
     time(tt)=time(tt-1)+dt;
 end
+%% Property Matrix Creation
+% Temperature
+Tvap=zeros(length(Tvapi),length(time)); % Mean Vapour Temperature
 
-Tvap=zeros(length(Tvapi),length(time));
+Tclad=zeros(length(Tvapi),length(time)); % Mean clad Temperature
 
-Tclad=zeros(length(Tvapi),length(time));
+TPT=zeros(length(Tvapi),length(time)); % Pressure tube temperature
 
-TPT=zeros(length(Tvapi),length(time));
+TCT=zeros(length(Tvapi),length(time)); % Calandria Tube Temperature
 
-TCT=zeros(length(Tvapi),length(time));
+Tvap(1:12,1)=Tvapi; % Initial Vapour temperature assignment
 
-kvap=zeros(length(Tvapi),length(time));
+Tfuelo=zeros(length(Qbundle),length(time)); % Outer fuel Temperature
 
-Cpvap=zeros(length(Tvapi),length(time));
+Tfuelmid=zeros(length(Qbundle),length(time)); % fuel centerline Temperature
 
-rhovap=zeros(length(Tvapi),length(time));
+Tfuelmeat=zeros(length(Qbundle),length(time)); % mean fuel temperature
 
-hclad=zeros(length(Tvapi),length(time));
+% Thermal Conductivity
 
-hpt=zeros(length(Tvapi),length(time));
+kvap=zeros(length(Tvapi),length(time)); % vapour thermal conductivity
 
-Qremoved=zeros(length(Tvapi),length(time));
+kvap(1:12,1)=k_init; % initial vapour thermal conductivity assignment
 
-Qremovedconv=zeros(length(Tvapi),length(time));
+% Heat Capacity
 
-Qremovedrad=zeros(length(Tvapi),length(time));
+Cpvap=zeros(length(Tvapi),length(time)); % Vapour Heat capacity
 
-Qret=zeros(length(Tvapi),length(time));
+Cpvap(1:12,1)=Cp_init; % initial vapour heat capacity assignment
 
-QlossPT=zeros(length(Tvapi),length(time));
+% Density
 
-Nu=zeros(length(Tvapi),length(time));
+rhovap=zeros(length(Tvapi),length(time)); % vapour density
 
-Pr=zeros(length(Tvapi),length(time));
+rhovap(1:12,1)=rho_init; % vapour density assignment
 
-Re=zeros(length(Tvapi),length(time));
+% HT coefficient
 
-RePT=zeros(length(Tvapi),length(time));
+hclad=zeros(length(Tvapi),length(time)); % heat transfer coefficient between fuel and vapour
 
-PrPT=zeros(length(Tvapi),length(time));
+hpt=zeros(length(Tvapi),length(time)); % heat transfer coefficient between PT and vapour
 
-NuPT=zeros(length(Tvapi),length(time));
+% Thermal Energy
 
-QconvPT=zeros(length(Tvapi),length(time));
+Qremoved=zeros(length(Tvapi),length(time)); % Total Heat removed by vapour from fuel elements
 
-QPT=zeros(length(Tvapi),length(time));
+Qremovedconv=zeros(length(Tvapi),length(time)); % heat removed from fuel elements by convection
 
-Tvap(1:12,1)=Tvapi;
+Qremovedrad=zeros(length(Tvapi),length(time)); % heat removed from fuel elements by radiation
 
-kvap(1:12,1)=k_init;
+Qret=zeros(length(Tvapi),length(time)); % heat remaining in the fuel elements
 
-Cpvap(1:12,1)=Cp_init;
+QlossPT=zeros(length(Tvapi),length(time)); % heat lost from PT/CT to moderator
 
-rhovap(1:12,1)=rho_init;
+QconvPT=zeros(length(Tvapi),length(time)); % heat removed by convection from PT
 
+QPT=zeros(length(Tvapi),length(time)); % heat remaining within the PT
 
+% Nusselt Number
+
+Nu=zeros(length(Tvapi),length(time)); % Nusselt number for fuel pins/vapour interaction
+
+NuPT=zeros(length(Tvapi),length(time)); % Nusselt number for PT/vapour interaction
+
+% Prandtl Number
+
+Pr=zeros(length(Tvapi),length(time)); % Prandtl number for PT/vapour interaction
+
+PrPT=zeros(length(Tvapi),length(time)); % Prandtl number for PT/vapour interaction
+
+% Reynolds Number
+
+Re=zeros(length(Tvapi),length(time)); % Reynolds number for PT/vapour interaction
+
+RePT=zeros(length(Tvapi),length(time)); % Reynolds number for PT/vapour interaction
+
+%% Initial Property calculations
 
 for ind=1:length(Qbundle)
     
@@ -318,81 +345,55 @@ for ind=1:length(Qbundle)
     
     TCT(ind,1)=Tvap(ind,1)-((((1/Qloss(2))+(1/Qloss(3))+(1/Qloss(4))+(1/Qloss(5))+(1/Qloss(2))+(1/Qloss(3))+(1/Qloss(4)))/2)*Qbundle(ind));
     
+    kgap=0.0476+(0.362e-3*Tclad(ind,1))-(0.618e-7*Tclad(ind,1)^2)+(0.718e-11*Tclad(ind,1)^3)*10^-3; %kW/m.C
+
+    dman=ric-(dfuel/2); %m
+
+    djump=10e-6; %m
+
+    hgap=kgap/(dman+djump);
+
+    Tfuelo(ind,1)=(Qel(ind)*1000/(dfuel/2*Lchannel)/hgap)+Tclad(ind,1);
+
+%% Fuel pin centerline temperature
+
+    
+    rfuel=dfuel/2;
+
+    reval=linspace(rfuel,0,divf);
+
+    Tfuel=zeros(1,divf);
+
+    Tfuel(1)=Tfuelo(ind,1);
+
+    for pev=2:divf
+    
+        Tfuel(pev)=(Qvol(ind)*1000/4/kUO2(Tfuel(pev-1))*(reval(pev-1)^2-reval(pev)^2))+Tfuel(pev-1);
+    
+    end
+    
+    Tfuelmid(ind,1)=Tfuel(length(Tfuel));
+    
+    Tfuelmeat(ind,1)=mean(Tfuel);
+    
+    clear Tfuel
+    
 end
 
+%% Transient calculations
 
 for n=2:length(time)
     for p=1:length(Qbundle)
         
-        Re(p,n)=mbundle(p)*Dh/XSteam('my_pT',Peval,Tvap(p,n-1)+0.1);
-    
-        Pr(p,n)=XSteam('Cp_pT',Peval,Tvap(p,n-1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n-1)+0.1)/XSteam('tc_pT', Peval,Tvap(p,n-1)+0.1);
-    
-        Nu(p,n)=0.023*Re(p,n)^(4/5)*Pr(p,n)^0.4;
-    
-        hclad(p,n)=Nu(p,n)*XSteam('tc_pT',Peval, Tvap(ind,1)+0.1)/Dh;
+        %% HT coefficient for fuel pin cladding
         
-        ef=0.325+(0.1246e6*doxide);
+        %% Start by computing the different characteristic numbers using data from the previous time step where properties are needed
+        %% Calculate the values for heat leaving and retained within the fuel elements.
+       
+        %% Calculate the values for heat leaving/entering and retained within the PT
+        %% calculate new vapour/cladding/PT/CT/fuel temperatures 
+        %% Repeat
         
-        ept=ef;
-        
-        Qremovedconv(p,n)=(hclad(p,n)*Afuel*(Tclad(p,n-1)-Tvap(p,n-1))/1000000);
-        
-        Qremovedrad(p,n)=((sigma*Afuel*((Tclad(p,n-1))^4-TPT(p,n-1)^4)/((1/ef)+(Afuel/(Aipt/9)*((1/ept)-1))))/1000000);
-        
-        Qremoved(p,n)=Qremovedconv(p,n)+Qremovedrad(p,n);
-        
-        RePT(p,n)=mbundle(p)*DPT/XSteam('my_pT',Peval,Tvap(p,n)+0.1);
-    
-        PrPT(p,n)=XSteam('Cp_pT',Peval,Tvap(p,n)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n)+0.1)/XSteam('tc_pT', Peval,Tvap(p,n)+0.1);
-    
-        NuPT(p,n)=0.023*RePT(p,n)^(4/5)*PrPT(p,n)^0.4;
-    
-        hpt(p,n)=Nu(p,n)*XSteam('tc_pT',Peval, Tvap(p,n)+0.1)/DPT;
-        
-        if Qremoved(p,n)>=Qbundle(p)
-            
-            Qremoved(p,n)=Qbundle(p);
-        end
-        
-        QconvPT(p,n)=hpt(p,n)*Aipt*(Tvap(p,n)-TPT(p,n-1))/1000000;
+       
         
         
-        
-        QPT(p,n)=Qremovedrad(p,n)+QconvPT(p,n);
-        
-        Qret(p,n)=Qbundle(p)-Qremoved(p,n);
-        
-        if p==1
-            hin=XSteam('hV_P',Peval);
-        else
-            hin=((mbundle(p-1)*XSteam('h_pT',Peval,Tvap(p-1)+0.01))+(mchange(p)*XSteam('hV_P',Peval)))/mbundle(p);
-        end
-        
-        hout=(Qremovedconv(p,n)*1000)+hin;
-        
-        Tvap(p,n)=XSteam('T_ph',Peval,hout);
-        
-        Cpclad=255.66+(0.1024*(Tclad(p,n-1)+273.15));
-        
-        Tclad(p,n)=(Qret(p,n)*1000000/mbundle(p)/Cpclad)+Tclad(p,n-1);
-        
-        CpPT=255.66+(0.1024*(TPT(p,n-1)+273.15));
-        
-        TPT(p,n)=TPT(p,n-1)+((Qremovedrad(p,n)+QconvPT(p,n))*1000000/CpPT/mPT);
-    end
-end
-
-
-
-
-
-
-
-                
-
-            
-
-        
-        
-           
