@@ -61,6 +61,14 @@ doxide=3.00e-6; % thickness of oxide layer
 
 sigma=5.670373e-8; %Stefan-Boltzmann constant
 
+ript=DPT/2;
+
+ropt=ript+tPT;
+
+rict=DCT/2;
+
+roct=rict+tCT;
+
 %% delta P calculation
 
 deltaP=(PSH)-PVH+((9.81*H*(XSteam('rhoL_p',Peval)-XSteam('rhoV_p',Peval)))/1000);
@@ -89,6 +97,13 @@ rhoref=255.66+(0.1024*TrefK);
 mclad=37*((doutclad)^2-(doutclad-(2*tclad))^2)/4*Lbund*rhoref;
 
 mPT=((DPT+(2*tPT))^2-(DPT)^2)/4*Lbund*rhoref;
+
+%% mass of fuel (single pin)
+
+rhofuel=10970/(1+(2.04e-5*Tref)+(8.7e-9*Tref^2));
+
+mfuel=Lbund*pi()/4*dfuel^2*rhofuel;
+
 %% calculate values for k for each section
 
 %reference mass flowrate
@@ -299,6 +314,8 @@ QconvPT=zeros(length(Tvapi),length(time)); % heat removed by convection from PT
 
 QPT=zeros(length(Tvapi),length(time)); % heat remaining within the PT
 
+Qvap=zeros(length(Tvapi),length(time)); % heat going into the vapour
+
 % Nusselt Number
 
 Nu=zeros(length(Tvapi),length(time)); % Nusselt number for fuel pins/vapour interaction
@@ -387,13 +404,86 @@ for n=2:length(time)
         
         %% HT coefficient for fuel pin cladding
         
-        %% Start by computing the different characteristic numbers using data from the previous time step where properties are needed
-        %% Calculate the values for heat leaving and retained within the fuel elements.
+        Re(p,n)=mbundle(p)*Dh/XSteam('my_pT',Peval,Tvap(p,n-1)+0.1);
+    
+        Pr(p,n)=XSteam('Cp_pT',Peval,Tvap(p,n-1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n-1)+0.1)/XSteam('tc_pT', Peval,Tvap(p,n-1)+0.1);
+    
+        Nu(p,n)=0.023*Re(p,n)^(4/5)*Pr(p,n)^0.4;
+    
+        hclad(p,n)=Nu(p,n)*XSteam('tc_pT',Peval, Tvap(p,n-1)+0.1)/Dh;
+        
+        %% HT coefficient for PT
+        
+        RePT(p,n)=mbundle(p)*DPT/XSteam('my_pT',Peval,Tvap(p,n-1)+0.1);
+        
+        PrPT(p,n)=XSteam('Cp_pT',Peval,Tvap(Peval,n-1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n-1)+0.1)/XSteam('tc_pT',Peval,Tvap(p,n-1)+0.1);
+        
+        NuPT(p,n)=0.023*RePT(p,n)^(4/5)*PrPT(p,n)^0.4;
+        
+        hpt(p,n)=NuPT(p,n)*XSteam('tc_pT',Peval,Tvap(p,n-1)+0.1)/DPT;
+        
+        %% Calculate heat removed, lost, generated in fuel pins
+        
+        Qremovedconv(p,n)=hclad(p,n)*Afuel*(Tclad(p,n-1)-Tvap(p,n-1));
+        
+        ef=0.325+(0.1246e6*doxide);
+        
+        ept=ef;
+        
+        Qremovedrad(p,n)=((sigma*Afuel*((Tclad(p,n-1))^4-TPT(p,n-1)^4)/((1/ef)+(Afuel/(Aipt/9)*((1/ept)-1))))/1000000);
+        
+        Qremoved(p,n)=Qremovedconv(p,n)+Qremovedrad(p,n);
+        
+        Qret(p,n)=(Qbundle(p)/37)-Qremoved(p,n);
+        
+        %% Calculate heat loss/retention in Pressure Tube
+        
+        QconvPT(p,n)=hpt(p,n)*Afuel*(Tvap(p,n-1)-TPT(p,n-1));
+        
+        TmeanCO2=(Tvap(p,n-1)+Tmod);
+        
+        if TmeanCO2>=300
+            TmeanCO2=300;
+        end
+        
+        kCO2=[14.60e-3 16.23e-3 17.87e-3 19.52e-3 21.18e-3 22.84e-3 27.00e-3 31.12e-3 35.20e-3 39.23e-3];
+
+        % CO2 thermal conductivity Temperatures
+
+        kCO2Temp=[0 20 40 60 80 100 150 200 250 300];
+
+        % CO2 thermal conductivity
+
+        kCO2sys=interp1(kCO2Temp,kCO2,TmeanCO2);
+        
+        RCO2=log(rict/ropt)/(2*pi()*kCO2sys*Lchannel);
+        
+        kzircCT=12.767-(5.4348e-4*Tmod)+(8.9818e-6*Tmod^2);
+
+        RCT=log(roct/rict)/(2*pi()*kzircCT*Lchannel);
+
+        Rmod=1/(hmod*DCT*pi()*Lchannel);
+        
+        UA=(1/RCO2)+(1/RCT)+(1/Rmod);
+        
+        QlossPT(p,n)=UA*(TPT(p,n-1)-Tmod)/1000000;
+        
+        QPT(p,n)=(37*Qremovedrad(p,n))-QlossPT(p,n)-QconvPT(p,n);
+        
+        Qvap(p,n)=Qremovedconv(p,n)+QconvPT(p,n);
        
-        %% Calculate the values for heat leaving/entering and retained within the PT
-        %% calculate new vapour/cladding/PT/CT/fuel temperatures 
-        %% Repeat
+        %% Temperature calculations
+        % fuel/cladding temperatures
+        tau=(Tfuelmeat(p,n-1)+273.15)/1000;
         
-       
+        Cpuo2=52.1743+(87.951*tau)-(84.2411*tau^2)+(31.542*tau^3)-(2.6334*tau^4)-(0.71391*tau^-2);
         
+        Tfuelmeat(p,n)=(Tfuelmeat(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel))/270.03*1000;
         
+        Tfuelo(p,n)=Tfuelo(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel);
+        
+        Tfuelmid(p,n)=Tfuelmid(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel);
+        
+        Tclad(p,n)=Tfuelo(p,n);        
+    end
+end
