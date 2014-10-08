@@ -1,4 +1,4 @@
-function Qloss=Qloss_single_channel2(Tbulk,Tmod,hbulk,hmod,Lbund)
+function Qloss=Qloss_single_channel3(Tbulk,Tmod,hbulk,hmod,Lbund)
 %% Initial dimension Definition
 
 Lchannel=Lbund; % m

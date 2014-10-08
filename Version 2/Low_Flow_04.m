@@ -246,7 +246,7 @@ end
 
 Lrun=100; %length of run (s)
 
-dt=0.1; %time division
+dt=0.01; %time division
 
 divf=10000;
                     
@@ -334,6 +334,14 @@ Re=zeros(length(Tvapi),length(time)); % Reynolds number for PT/vapour interactio
 
 RePT=zeros(length(Tvapi),length(time)); % Reynolds number for PT/vapour interaction
 
+% Bundle exit enthalpy
+
+hout=zeros(length(Tvapi),length(time));
+
+% RESISTANCE
+
+RCTi=zeros(length(Tvapi),1);
+
 %% Initial Property calculations
 
 for ind=1:length(Qbundle)
@@ -342,9 +350,14 @@ for ind=1:length(Qbundle)
     
     Pr(ind,1)=XSteam('Cp_pT',Peval,Tvap(ind,1)-0.1)*1000*XSteam('my_pT',Peval,Tvap(ind,1)-0.1)/XSteam('tc_pT', Peval,Tvap(ind,1)-0.1);
     
-    Nu(ind,1)=0.023*Re(ind,1)^(4/5)*Pr(ind,1)^0.4;
+    if Re<=3000
+        Nu(ind,1)=4.36;
+    else
+        
+        Nu(ind,1)=0.023*Re(ind,1)^(4/5)*Pr(ind,1)^0.4;
+    end
     
-    hclad(ind,1)=Nu(ind,1)*XSteam('tc_pT',Peval, Tvap(ind,1)-0.1)/Dh;
+    hclad(ind,1)=Nu(ind,1)*XSteam('tc_pT',Peval, Tvap(ind,1)-1)/Dh;
     
     Tclad(ind,1)=(Qbundle(ind)*1000/37/hclad(ind,1)/Afuel)+Tvap(ind,1);
     
@@ -355,12 +368,52 @@ for ind=1:length(Qbundle)
     NuPT(ind,1)=0.023*RePT(ind,1)^(4/5)*PrPT(ind,1)^0.4;
     
     hpt(ind,1)=Nu(ind,1)*XSteam('tc_pT',Peval, Tvap(ind,1)-0.1)/DPT;
+        %% System properties
+    % pressure tube thermal conductivity
+
+    kzircPT=12.767-(5.4348e-4*(Tvap(ind,1)+273.15))+(8.9818e-6*(Tvap(ind,1)+273.15)^2); %W/m.K
+
+    % calandria tube thermal conductivity
+
+    kzircCT=12.767-(5.4348e-4*(Tmod+273.15))+(8.9818e-6*(Tmod+273.15)^2);  %W/m.K
+
+    % CO2 thermal conductivity
+
+    kCO2=[14.60e-3 16.23e-3 17.87e-3 19.52e-3 21.18e-3 22.84e-3 27.00e-3 31.12e-3 35.20e-3 39.23e-3];
+
+    % CO2 thermal conductivity Temperatures
+
+    kCO2Temp=[0 20 40 60 80 100 150 200 250 300];
+
+    % CO2 thermal conductivity
     
-    Qloss=Qloss_single_channel2(Tvap(ind,1),Tmod,hpt(ind,1),hmod,Lbund);
+    TevalCO2=((Tvap(ind,1)+Tmod)+273.15)/2;    
+
+    kCO2sys=interp1(kCO2Temp,kCO2,TevalCO2);
     
-    TPT(ind,1)=Tvap(ind,1)-((((1/Qloss(2))+(1/Qloss(3))+(1/Qloss(2)))/2)*Qbundle(ind));
+    R1=1/(hpt(ind,1)*Aipt);
     
-    TCT(ind,1)=Tvap(ind,1)-((((1/Qloss(2))+(1/Qloss(3))+(1/Qloss(4))+(1/Qloss(5))+(1/Qloss(2))+(1/Qloss(3))+(1/Qloss(4)))/2)*Qbundle(ind));
+    R2=log(ropt/ript)/(kzircPT*Aopt);
+    
+    R3=log(rict/ropt)/(kCO2sys*Aict);
+    
+    R4=log(roct/rict)/(kzircCT*Aoct);
+    
+    R5=1/(hmod*Aoct);
+    
+    Rtotalinv=(1/R1)+(1/R2)+(1/R3)+(1/R4)+(1/R5);
+    
+    Rtotal=Rtotalinv^-1;
+    
+    QlossPT(ind,1)=(Tvap(ind,1)-Tmod)/Rtotal;
+    
+    RPT=1/((1/R1)+(1/R2));
+    
+    TPT(ind,1)=Tvap(ind,1)-(QlossPT(ind,1)*RPT);
+    
+    RCTi=1/((1/R1)+(1/R2)+(1/R3)+(1/R4));
+    
+    TCT(ind,1)=Tvap(ind,1)+(QlossPT(ind,1)*RCTi);
     
     kgap=0.0476+(0.362e-3*Tclad(ind,1))-(0.618e-7*Tclad(ind,1)^2)+(0.718e-11*Tclad(ind,1)^3)*10^-3; %kW/m.C
 
@@ -407,8 +460,15 @@ for n=2:length(time)
         Re(p,n)=mbundle(p)*Dh/XSteam('my_pT',Peval,Tvap(p,n-1)+0.1);
     
         Pr(p,n)=XSteam('Cp_pT',Peval,Tvap(p,n-1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n-1)+0.1)/XSteam('tc_pT', Peval,Tvap(p,n-1)+0.1);
-    
-        Nu(p,n)=0.023*Re(p,n)^(4/5)*Pr(p,n)^0.4;
+        
+        if Re<=3000
+            
+            Nu(p,n)=4.36;
+        else
+        
+            Nu(p,n)=0.023*Re(p,n)^(4/5)*Pr(p,n)^0.4;
+        
+        end
     
         hclad(p,n)=Nu(p,n)*XSteam('tc_pT',Peval, Tvap(p,n-1)+0.1)/Dh;
         
@@ -416,15 +476,24 @@ for n=2:length(time)
         
         RePT(p,n)=mbundle(p)*DPT/XSteam('my_pT',Peval,Tvap(p,n-1)+0.1);
         
-        PrPT(p,n)=XSteam('Cp_pT',Peval,Tvap(Peval,n-1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n-1)+0.1)/XSteam('tc_pT',Peval,Tvap(p,n-1)+0.1);
-        
-        NuPT(p,n)=0.023*RePT(p,n)^(4/5)*PrPT(p,n)^0.4;
+        PrPT(p,n)=XSteam('Cp_pT',Peval,Tvap(p,n-1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(p,n-1)+0.1)/XSteam('tc_pT',Peval,Tvap(p,n-1)+0.1);
+        if RePT<=3000
+            
+            NuPT(p,n)=4.36;
+        else
+            NuPT(p,n)=0.023*RePT(p,n)^(4/5)*PrPT(p,n)^0.4;
+        end
         
         hpt(p,n)=NuPT(p,n)*XSteam('tc_pT',Peval,Tvap(p,n-1)+0.1)/DPT;
         
         %% Calculate heat removed, lost, generated in fuel pins
         
-        Qremovedconv(p,n)=hclad(p,n)*Afuel*(Tclad(p,n-1)-Tvap(p,n-1));
+        Qremovedconv(p,n)=hclad(p,n)*Afuel*(Tclad(p,n-1)-Tvap(p,n-1))/1000000;
+        
+        if Qremovedconv(p,n)>=Qel(p)
+            
+            Qremovedconv(p,n)=Qel(p);
+        end
         
         ef=0.325+(0.1246e6*doxide);
         
@@ -438,7 +507,7 @@ for n=2:length(time)
         
         %% Calculate heat loss/retention in Pressure Tube
         
-        QconvPT(p,n)=hpt(p,n)*Afuel*(Tvap(p,n-1)-TPT(p,n-1));
+        QconvPT(p,n)=hpt(p,n)*Afuel*(Tvap(p,n-1)-TPT(p,n-1))/1000000;
         
         TmeanCO2=(Tvap(p,n-1)+Tmod);
         
@@ -470,7 +539,7 @@ for n=2:length(time)
         
         QPT(p,n)=(37*Qremovedrad(p,n))-QlossPT(p,n)-QconvPT(p,n);
         
-        Qvap(p,n)=Qremovedconv(p,n)+QconvPT(p,n);
+        Qvap(p,n)=(37*Qremovedconv(p,n))+QconvPT(p,n);
        
         %% Temperature calculations
         % fuel/cladding temperatures
@@ -478,12 +547,32 @@ for n=2:length(time)
         
         Cpuo2=52.1743+(87.951*tau)-(84.2411*tau^2)+(31.542*tau^3)-(2.6334*tau^4)-(0.71391*tau^-2);
         
-        Tfuelmeat(p,n)=(Tfuelmeat(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel))/270.03*1000;
+        Tfuelmeat(p,n)=(Tfuelmeat(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel))/270.03;
         
         Tfuelo(p,n)=Tfuelo(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel);
         
         Tfuelmid(p,n)=Tfuelmid(p,n-1)+(Qret(p,n)*1000000/Cpuo2/mfuel);
         
-        Tclad(p,n)=Tfuelo(p,n);        
+        Tclad(p,n)=Tfuelo(p,n);
+        
+        CpPT=255.66+(0.1024*(TPT(p,n-1)+273.15));
+        
+        TPT(p,n)=TPT(p,n-1)+(QPT(p,n)*1000000/mPT/CpPT);
+        
+        if p==1
+            
+            hin=XSteam('hV_p',Peval);
+        else
+            
+            hin=1/mbundle(p)*((XSteam('hV_p',Peval)*mchange(p))+(hout(p-1,n-1)*mbundle(p-1)));
+        end
+        
+        Cpvap(p,n)=XSteam('Cp_pT',Peval,Tvap(p,n-1));
+        
+        hout(p,n)=hin+(Qvap(p,n)*1000/mbundle(p)/Cpvap(p,n));
+        
+        Tvap(p,n)=XSteam('T_ph',Peval,hout(p,n));
+        
+        TCT(p,n)=(QlossPT(p,n)*RCO2)+TCT(p,n-1);
     end
 end

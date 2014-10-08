@@ -62,7 +62,7 @@ R4=log(roct/rict)/(2*pi()*kzircCT*Lchannel);
 
 R5=1/(hmod*DCT*pi()*Lchannel);
 
-Rtotal=R1+R2+R3+R4+R5;
+Rtotal=((1/R1)+(1/R2)+(1/R3)+(1/R4)+(1/R5))^-1;
 
 Qlossval=(Tbulk-Tmod)/Rtotal;
 
