@@ -53,6 +53,8 @@ Aoct=pi()*(DCT+(2*tCT))*Lbund;
 
 Afuel=pi()*doutclad*Lbund*37;
 
+Aoutfuel=9*pi()*doutclad; % Area of outer fuel elements that sees PT
+
 doxide=3.00e-6; % thickness of oxide layer
 
 sigma=5.670373e-8; %Stefan-Boltzmann constant
@@ -92,6 +94,8 @@ rhoref=255.66+(0.1024*TrefK);
 mclad=37*((doutclad)^2-(doutclad-(2*tclad))^2)/4*Lbund*rhoref;
 
 mPT=((DPT+(2*tPT))^2-(DPT)^2)/4*Lbund*rhoref;
+
+mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref;
 
 %% mass of fuel (single pin)
 
@@ -170,7 +174,7 @@ mbundle=((1-alpha)*Qbundle*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
 
 Lrun=100; %length of run (s)
 
-dt=0.01; %time division
+dt=1; %time division
 
 divf=10000;
                     
@@ -204,11 +208,19 @@ kvap=zeros(1,length(time)); % vapour thermal conductivity
 
 kvap(1,1)=XSteam('tcV_p',Peval); % initial vapour thermal conductivity assignment
 
+kCO2sys=zeros(1,length(time));
 % Heat Capacity
 
 Cpvap=zeros(1,length(time)); % Vapour Heat capacity
 
-Cpvap(1,1)=XSteam('CpV_p',Peval); % initial vapour heat capacity assignment
+Cpvap(1,1)=XSteam('CpV_p',Peval)*1000; % initial vapour heat capacity assignment
+
+
+Cpclad=zeros(1,length(time)); % cladding Heat capacity
+
+CpPT=zeros(1,length(time)); % Pressure Tube Heat capacity
+
+CpCT=zeros(1,length(time)); % Pressure Tube Heat capacity
 
 % Density
 
@@ -221,6 +233,58 @@ rhovap(1,1)=XSteam('rhoV_p',Peval); % vapour density assignment
 hcool=zeros(1,length(time)); % heat transfer coefficient between fuel and vapour
 
 hpt=zeros(1,length(time)); % heat transfer coefficient between PT and vapour
+
+hrFPT=zeros(1,length(time)); % radiative heat transfer coefficient for inside channel
+
+hCO2rad=zeros(1,length(time)); % radiative heat transfer coefficient for CO2 gap
+
+A1=zeros(1,length(time));
+
+A2=zeros(1,length(time));
+
+A3=zeros(1,length(time));
+
+A4=zeros(1,length(time));
+
+B1=zeros(1,length(time));
+
+B2=zeros(1,length(time));
+
+B3=zeros(1,length(time));
+
+B4=zeros(1,length(time));
+
+C1=zeros(1,length(time));
+
+C2=zeros(1,length(time));
+
+C3=zeros(1,length(time));
+
+C4=zeros(1,length(time));
+
+D1=zeros(1,length(time));
+
+D2=zeros(1,length(time));
+
+D3=zeros(1,length(time));
+
+D4=zeros(1,length(time));
+
+E1=zeros(1,length(time));
+
+E2=zeros(1,length(time));
+
+E3=zeros(1,length(time));
+
+E4=zeros(1,length(time));
+
+dTclad=zeros(1,length(time));
+
+dTvap=zeros(1,length(time));
+
+dTPT=zeros(1,length(time));
+
+dTCT=zeros(1,length(time));
 
 % Thermal Energy
 
@@ -295,23 +359,23 @@ hout=zeros(1,length(time));
 
     % CO2 thermal conductivity
 
-    kCO2=[14.60e-3 16.23e-3 17.87e-3 19.52e-3 21.18e-3 22.84e-3 27.00e-3 31.12e-3 35.20e-3 39.23e-3];
+    kCO2=[0.01051 0.01456 0.01858 0.02257 0.02652 0.03044 0.03814 0.04565 0.05293 0.08491 0.10688 0.11522];
 
     % CO2 thermal conductivity Temperatures
 
-    kCO2Temp=[0 20 40 60 80 100 150 200 250 300];
+    kCO2Temp=[-50 0 50 100 150 200 300 400 500 1000 1500 2000];
 
     % CO2 thermal conductivity
     
-    TevalCO2=((Tvap(1,1)+Tmod)+273.15)/2;    
+    TevalCO2=((Tvap(1,1)+Tmod))/2;    
 
-    kCO2sys=interp1(kCO2Temp,kCO2,TevalCO2);
+    kCO2sys(1,1)=interp1(kCO2Temp,kCO2,TevalCO2);
     
     R1=1/(hpt(1,1)*Aipt);
     
     R2=log(ropt/ript)/(kzircPT*Aopt);
     
-    R3=log(rict/ropt)/(kCO2sys*Aict);
+    R3=log(rict/ropt)/(kCO2sys(1,1)*Aict);
     
     R4=log(roct/rict)/(kzircCT*Aoct);
     
@@ -325,9 +389,9 @@ hout=zeros(1,length(time));
     
     TPT(1,1)=Tvap(1,1)-(QlossPT(1,1)*RPT);
     
-    RCTi=1/((1/R1)+(1/R2)+(1/R3)+(1/R4));
+    RCTi=R1+R2+R3+R4;
     
-    TCT(1,1)=Tvap(1,1)+(QlossPT(1,1)*RCTi);
+    TCT(1,1)=Tvap(1,1)-(QlossPT(1,1)*RCTi);
     
     kgap=0.0476+(0.362e-3*Tclad(1,1))-(0.618e-7*Tclad(1,1)^2)+(0.718e-11*Tclad(1,1)^3)*10^-3; %kW/m.C
 
@@ -362,6 +426,8 @@ hout=zeros(1,length(time));
     
     clear Tfuel
     
+    
+    hin=XSteam('hV_p',Peval)/1000;
 
 
 %% Transient calculations
@@ -392,93 +458,94 @@ for n=2:length(time)
           
         hpt(1,n)=hcool(1,n);
         
-        %% Calculate heat removed, lost, generated in fuel pins
+        eclad=0.325+(0.1246e6*doxide);
         
-        Qremovedconv(1,n)=hcool(1,n)*Afuel*(Tclad(1,n-1)-Tvap(1,n-1))/1000000;
+        ePT=eclad;
         
-        if Qremovedconv(1,n)>=Qel(1)
-            
-            Qremovedconv(1,n)=Qel(1);
-        end
+        eCT=ePT;
         
-        ef=0.325+(0.1246e6*doxide);
+        hrFPT(1,n)=sigma*(Tclad(1,n-1)+TPT(1,n-1))*((Tclad(1,n-1)^2)+(TPT(1,n-1)^2))/((1/eclad)+((1-ePT)/ePT*Aoutfuel/Aipt));
         
-        ept=ef;
+        hCO2rad(1,n)=sigma*(TPT(1,n-1)+TCT(1,n-1))*((TPT(1,n-1)^2)+(TCT(1,n-1)^2))/((1/ePT)+((1-eCT)/eCT*Aopt/Aict));
         
-        Qremovedrad(1,n)=((sigma*Afuel*((Tclad(1,n-1))^4-TPT(1,n-1)^4)/((1/ef)+(Afuel/(Aipt/9)*((1/ept)-1))))/1000000);
+        Cpclad(1,n)=255.66+(0.1024*(Tclad(1,n-1)+273.15)); %J/kg.K
         
-        Qremoved(1,n)=Qremovedconv(1,n)+Qremovedrad(1,n);
-        
-        Qret(1,n)=(Qbundle(1)/37)-Qremoved(1,n);
-        
-        %% Calculate heat loss/retention in Pressure Tube
-        
-        QconvPT(1,n)=hpt(1,n)*Afuel*(Tvap(1,n-1)-TPT(1,n-1))/1000000;
-        
-        TmeanCO2=(Tvap(1,n-1)+Tmod);
-        
-        if TmeanCO2>=300
-            TmeanCO2=300;
-        end
-        
-        kCO2=[14.60e-3 16.23e-3 17.87e-3 19.52e-3 21.18e-3 22.84e-3 27.00e-3 31.12e-3 35.20e-3 39.23e-3];
-
-        % CO2 thermal conductivity Temperatures
-
-        kCO2Temp=[0 20 40 60 80 100 150 200 250 300];
-
-        % CO2 thermal conductivity
-
-        kCO2sys=interp1(kCO2Temp,kCO2,TmeanCO2);
-        
-        RCO2=log(rict/ropt)/(2*pi()*kCO2sys*Lchannel);
-        
-        kzircCT=12.767-(5.4348e-4*Tmod)+(8.9818e-6*Tmod^2);
-
-        RCT=log(roct/rict)/(2*pi()*kzircCT*Lchannel);
-
-        Rmod=1/(hmod*DCT*pi()*Lchannel);
-        
-        UA=(1/RCO2)+(1/RCT)+(1/Rmod);
-        
-        QlossPT(1,n)=UA*(TPT(1,n-1)-Tmod)/1000000;
-        
-        QPT(1,n)=(37*Qremovedrad(1,n))-QlossPT(1,n)-QconvPT(1,n);
-        
-        Qvap(1,n)=(37*Qremovedconv(1,n))+QconvPT(1,n);
-       
-        %% Temperature calculations
-        % fuel/cladding temperatures
-        tau=(Tfuelmeat(1,n-1)+273.15)/1000;
-        
-        Cpuo2=52.1743+(87.951*tau)-(84.2411*tau^2)+(31.542*tau^3)-(2.6334*tau^4)-(0.71391*tau^-2);
-        
-        Tfuelmeat(1,n)=(Tfuelmeat(1,n-1)+(Qret(1,n)*1000000/Cpuo2/mfuel))/270.03;
-        
-        Tfuelo(1,n)=Tfuelo(1,n-1)+(Qret(1,n)*1000000/Cpuo2/mfuel);
-        
-        Tfuelmid(1,n)=Tfuelmid(1,n-1)+(Qret(1,n)*1000000/Cpuo2/mfuel);
-        
-        Tclad(1,n)=Tfuelo(1,n);
-        
-        CpPT=255.66+(0.1024*(TPT(1,n-1)+273.15));
-        
-        TPT(1,n)=TPT(1,n-1)+(QPT(1,n)*1000000/mPT/CpPT);
-        
-        if 1==1
-            
-            hin=XSteam('hV_p',Peval);
+        if Tvap(1,n-1)==XSteam('Tsat_p',Peval)
+            Cpvap(1,n)=XSteam('CpV_p',Peval)*1000;
         else
-            
-            hin=1/mbundle(1)*((XSteam('hV_p',Peval)*mchange(1))+(hout(1-1,n-1)*mbundle(1-1)));
+            Cpvap(1,n)=XSteam('Cp_pT',Peval,Tvap(n-1))*1000;
         end
         
-        Cpvap(1,n)=XSteam('Cp_pT',Peval,Tvap(1,n-1));
+        if Tvap(1,n-1)==XSteam('Tsat_p',Peval)
+            
+            hout(1,n)=XSteam('hV_p',Peval)*1000;
+        else
+            hout(1,n)=XSteam('h_pT',Peval,Tvap(n-1))*1000;
+        end
         
-        hout(1,n)=hin+(Qvap(1,n)*1000/mbundle(1)/Cpvap(1,n));
+        CpPT(1,n)=255.66+(0.1024*(TPT(1,n-1)+273.15)); %J/kg.K
         
-        Tvap(1,n)=XSteam('T_ph',Peval,hout(1,n));
+        kCO2sys(1,n)=interp1(kCO2Temp,kCO2,((TPT(1,n-1)+TCT(1,n-1))/2)); % W/m.K
         
-        TCT(1,n)=(QlossPT(1,n)*RCO2)+TCT(1,n-1);
-   
+        hCO2rad(1,n)=sigma*(TPT(1,n-1)+TCT(1,n-1))*((TPT(1,n-1)^2)+(TCT(1,n-1)^2))/((1/ePT)+(((1-eCT)/eCT)*Aopt/Aict));
+        
+        CpCT(1,n)=255.66+(0.1024*(TCT(1,n-1)+273.15)); %J/kg.K
+        
+        A1(1,n)=(-Afuel*hcool(1,n)/mclad/Cpclad(1,n))-(Aoutfuel*hrFPT(1,n)/mclad/Cpclad(1,n));
+        
+        B1(1,n)=(Afuel*hcool(1,n)/mclad/Cpclad(1,n));
+        
+        C1(1,n)=(Aoutfuel*hrFPT(1,n)/mclad/Cpclad(1,n));
+        
+        D1(1,n)=0;
+        
+        E1(1,n)=Qbundle/1000000/mclad/Cpclad(1,n);
+        
+        dTclad(1,n)=(Tclad(1,n-1)*exp(-A1(1,n)*dt))+((1-exp(-A1(1,n)*dt))*(-(B1(1,n)+C1(1,n)+D1(1,n)+E1(1,n))/A1(1,n)));
+        
+        Tclad(1,n)=Tclad(1,n-1)+dTclad(1,n);
+        
+        A2(1,n)=hcool(1,n)/mbundle/Cpvap(1,n);
+        
+        B2(1,n)=-(2*hcool(1,n)/mbundle/Cpvap(1,n));
+        
+        C2(1,n)=hcool(1,n)/mbundle/Cpvap(1,n);
+        
+        D2(1,n)=0;
+        
+        E2(1,n)=(hout(1,n)-hin)/Cpvap(1,n);
+        
+        dTvap(1,n)=(Tvap(1,n-1)*exp(-B2(1,n)*dt))+((1-exp(-A2(1,n)*dt))*(-(A2(1,n)+C2(1,n)+D2(1,n)+E2(1,n))/B2(1,n)));
+        
+        Tvap(1,n)=Tvap(1,n-1)+dTvap(1,n);
+        
+        A3(1,n)=hrFPT(1,n)*Aoutfuel/mPT/CpPT(1,n);
+        
+        B3(1,n)=hcool(1,n)*Aipt/mPT/CpPT(1,n);
+        
+        C3(1,n)=-A3(1,n)-B3(1,n)-(2*pi()*Lbund*kCO2sys(1,n)/mPT/CpPT(1,n)/log(rict/ropt))-(hCO2rad(1,n)*Aopt/mPT/CpPT(1,n));
+        
+        D3(1,n)=(2*pi()*Lbund*kCO2sys(1,n)/mPT/CpPT(1,n)/log(rict/ropt))+(hCO2rad(1,n)*Aopt/mPT/CpPT(1,n));
+        
+        E3(1,n)=0;
+        
+        dTPT(1,n)=(TPT(1,n-1)*exp(-C3(1,n)*dt))+((1-exp(-A3(1,n)*dt))*(-(B3(1,n)+A3(1,n)+D3(1,n)+E3(1,n))/C3(1,n)));
+        
+        TPT(1,n)=TPT(1,n-1)+dTPT(1,n);
+        
+        A4(1,n)=0;
+        
+        B4(1,n)=0;
+        
+        C4(1,n)=(2*pi()*Lbund*kCO2sys(1,n)/mCT/CpCT(1,n)/log(rict/ropt))+(hCO2rad(1,n)*Aopt/mCT/CpCT(1,n));
+        
+        D4(1,n)=-C4(1,n)-(hmod*Aoct/mCT/CpCT(1,n));
+        
+        E4(1,n)=(-D4(1,n)-C4(1,n))*Tmod;
+        
+        dTCT(1,n)=(TCT(1,n-1)*exp(-D4(1,n)*dt))+((1-exp(-A4(1,n)*dt))*(-(B4(1,n)+A4(1,n)+C4(1,n)+E4(1,n))/D4(1,n)));
+        
+        TCT(1,n)=TCT(1,n-1)+dTCT(1,n);   
 end
+
+plot(time,Tclad);

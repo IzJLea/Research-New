@@ -39,6 +39,8 @@ djump=10e-6; %m
 
 Lchannel=5.94; %m
 
+Lbund=Lchannel/12;
+
 tPT=0.00424;
 
 tCT=0.0014;

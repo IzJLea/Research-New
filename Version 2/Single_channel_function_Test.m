@@ -1,16 +1,16 @@
-Qchannel=5:0.1:12;
+Qchannel=0.150;
 
 Results=zeros(1,length(Qchannel));
 
 Results2=zeros(1,length(Qchannel));
 
-Tin=267.2;
+Tin=120;
 
 Tmod=60; %C
 
-Lbund=0.5;
+Lbund=6;
 
-Pout1=10;
+Pout1=2;
 
 for resind=1:length(Qchannel)
 
