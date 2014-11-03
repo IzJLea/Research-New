@@ -37,7 +37,7 @@ ric=roc-tclad;
 
 Lchannel=5.94; %m
 
-Lbund=Lchannel;
+Lbund=Lchannel/12;
 
 tPT=0.00424;
 
@@ -172,7 +172,7 @@ mbundle=((1-alpha)*Qbundle*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
     
 
 
-Lrun=10000; %length of run (s)
+Lrun=100; %length of run (s)
 
 dt=1; %time division
 
@@ -344,7 +344,7 @@ hout=zeros(1,length(time));
     
     hcool(1,1)=Nu(1,1)*XSteam('tc_pT',Peval, Tvap(1,1)-0.1)/Dh; % W/m^2.K
     
-    Tclad(1,1)=(Qbundle*1000000/hcool(1,1)/Afuel)+Tvap(1,1);
+    Tclad(1,1)=(Qbundle*1000/hcool(1,1)/Afuel)+Tvap(1,1);
     
     
     hpt(1,1)=hcool(1,1);%W/m^2.K
@@ -539,9 +539,9 @@ for n=2:length(time)
         
         C4(1,n)=((2*pi()*Lbund*kCO2sys(1,n)/mCT/CpCT(1,n)/log(rict/ropt))+(hCO2rad(1,n)*Aopt/mCT/CpCT(1,n)))*TPT(1,n-1);
         
-        D4(1,n)=((-((2*pi()*Lbund*kCO2sys(1,n)/mCT/CpCT(1,n)/log(rict/ropt))+(hCO2rad(1,n)*Aopt/mCT/CpCT(1,n))))-(hmod*Aoct/mCT/CpCT(1,n)));
+        D4(1,n)=(-((2*pi()*Lbund*kCO2sys(1,n)/mCT/CpCT(1,n)/log(rict/ropt))+(hCO2rad(1,n)*Aopt/mCT/CpCT(1,n))))-(hmod*Aoct/mCT/CpCT(1,n))
         
-        E4(1,n)=hmod*Aoct/mCT/CpCT(1,n)*Tmod;
+        E4(1,n)=(-D4(1,n)-C4(1,n))*Tmod;
         
         dTCT(1,n)=(TCT(1,n-1)*exp(-D4(1,n)*dt))+((1-exp(-A4(1,n)*dt))*(-(B4(1,n)+A4(1,n)+C4(1,n)+E4(1,n))/D4(1,n)));
         
