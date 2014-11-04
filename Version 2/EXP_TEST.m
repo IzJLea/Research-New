@@ -174,15 +174,25 @@ mflow=Qbundle*1000*(1-alpha)/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)); % kg/s
 
 Time=500;  %seconds
 
-div=0.5;
+div=.5;
 
 ind=Time/div;
 
 Tclad=zeros(1,ind);
 
+dTclad=zeros(1,ind);
+
 Tvap=zeros(1,ind);
 
+dTvap=zeros(1,ind);
+
 TPT=zeros(1,ind);
+
+dTPT=zeros(1,ind);
+
+Tfuel=zeros(1,ind);
+
+dTfuel=zeros(1,ind);
 
 Reynolds=zeros(1,ind);
 
@@ -194,11 +204,17 @@ hcool=zeros(1,ind);
 
 hrad=zeros(1,ind);
 
+kuo2=zeros(1,ind);
+
+kclad=zeros(1,ind);
+
 Cpclad=zeros(1,ind);
 
 CpPT=zeros(1,ind);
 
 Cpvap=zeros(1,ind);
+
+Cpfuel=zeros(1,ind);
 
 hout=zeros(1,ind);
 
@@ -206,9 +222,7 @@ A1=zeros(1,ind);
     
 B1=zeros(1,ind);
     
-C1=zeros(1,ind);
-    
-D1=zeros(1,ind);
+E1=zeros(1,ind);
     
 A2=zeros(1,ind);
     
@@ -217,15 +231,31 @@ B2=zeros(1,ind);
 C2=zeros(1,ind);
     
 D2=zeros(1,ind);
-    
-A3=zeros(1,ind);
-    
+       
 B3=zeros(1,ind);
     
 C3=zeros(1,ind);
     
 D3=zeros(1,ind);
-%% initial Temperature
+
+E3=zeros(1,ind);
+
+C4=zeros(1,ind);
+
+D4=zeros(1,ind);
+
+Rfuel=zeros(1,ind);
+
+Rclad=zeros(1,ind);
+
+Rgap=zeros(1,ind);
+
+Rconv=zeros(1,ind);
+
+R1=zeros(1,ind);
+
+R2=zeros(1,ind);
+%% initial Temperatures
 
 Tvap(1,1)=XSteam('Tsat_p',Peval);
 
@@ -244,7 +274,25 @@ hcool(1,1)=Nusselt(1,1)*XSteam('tcL_p',Peval)/Dh;
 
 Tclad(1,1)=(Qbundle*1000000/Afuel/hcool(1,1))+Tvap(1,1);
 
+kuo2(1,1)=kUO2(Tclad(1,1))*1000;
+
+kclad(1,1)=12.767-(5.4348e-4*(Tclad(1,1)+273.15))+(8.9818e-6*(Tclad(1,1)+273.15)^2);%W/m.K
+
+Rfuel(1,1)=1/(4*pi()*kuo2(1,1));
+
+Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,1));
+
+Rgap(1,1)=0;
+
+Rconv(1,1)=1/(Afuel/37*hcool(1,1));
+
+R1(1,1)=(Rfuel(1,1)/2)+Rgap(1,1)+(Rclad(1,1)/2);
+
+R2(1,1)=(Rclad(1,1)/2)+Rconv(1,1);
+
 TPT(1,1)=Tvap(1,1); % This is only temporary while Qloss is equal to zero. Once method works this needs to be changed.
+
+Tfuel(1,1)=Tclad(1,1)+(Qchannel*1000000/37*R1(1,1));
 
 hin=XSteam('hV_p',Peval)*1000; % J/kg
 
@@ -279,6 +327,8 @@ for n=2:ind
     
     CpPT(1,n)=255.66+(0.1024*(TPT(1,n-1)+273.15)); %J/kg.K
     
+    Cpfuel(1,n)=
+    
     if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
     
         Cpvap(1,n)=XSteam('Cp_pT',Peval,Tvap(1,n-1))*1000;
@@ -293,41 +343,23 @@ for n=2:ind
         hout(1,n)=XSteam('h_pT',Peval,Tvap(1,n-1)+0.1)*1000;
     end
     
-    A1(1,n)=-((hcool(1,n)*Afuel)+(hrad(1,n)*Afuel/2))/(mclad*Cpclad(1,n));
+    kuo2(1,n)=kUO2(Tfuel(1,n-1))*1000; % W/m.K
     
-    B1(1,n)=hcool(1,n)*Afuel*Tvap(1,n-1)/mclad/Cpclad(1,n);
+    kclad(1,n)=12.767-(5.4348e-4*(Tclad(1,n-1)+273.15))+(8.9818e-6*(Tclad(1,n-1)+273.15)^2); %W/m.K
     
-    C1(1,n)=((hrad(1,n)*Afuel/2*mclad/Cpclad(1,n))+(hcool(1,n)*Aipt/mclad/Cpclad(1,n)))*TPT(1,n-1);
+    Rfuel(1,n)=1/(4*pi()*kuo2(1,n));
     
-    D1(1,n)=Qchannel*1000000/mclad/Cpclad(1,n);
+    Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,n));
+
+    Rgap(1,n)=0;
+
+    Rconv(1,n)=1/(Afuel/37*hcool(1,n));
+
+    R1(1,n)=(Rfuel(1,n)/2)+Rgap(1,n)+(Rclad(1,n)/2);
+
+    R2(1,n)=(Rclad(1,n)/2)+Rconv(1,n);
     
-    A2(1,n)=hcool(1,n)*Afuel*Tclad(1,n-1)/mflow/Cpvap(1,n);
-    
-    B2(1,n)=-hcool(1,n)*(Afuel+Aipt)/mflow/Cpvap(1,n);
-    
-    C2(1,n)=hcool(1,n)*Aipt*TPT(1,n)/mflow/Cpvap(1,n);
-    
-    D2(1,n)=(hout(1,n)-hin)/Cpvap(1,n);
-    
-    A3(1,n)=hrad(1,n)*Afuel/2/mPT/CpPT(1,n);
-    
-    B3(1,n)=hcool(1,n)*Aipt*Tvap(1,n)/mPT/CpPT(1,n);
-    
-    C3(1,n)=-((hrad(1,n)*Afuel/2)+(hcool(1,n)*Aipt))/mPT/CpPT(1,n);
-    
-    D3(1,n)=0;
-    
-    dTclad=(Tclad(1,n-1)*exp(-A1(1,n)*div))+(-(B1(1,n)+C1(1,n)+D1(1,n))/A1(1,n)*(1-exp(-A1(1,n)*div)));
-    
-    dTvap=(Tvap(1,n-1)*exp(-B2(1,n)*div))+(-(A2(1,n)+C2(1,n)+D2(1,n))/B2(1,n)*(1-exp(-B2(1,n)*div)));
-    
-    dTPT=(TPT(1,n-1)*exp(-C3(1,n)*div))+(-(B3(1,n)+A3(1,n)+D3(1,n))/C3(1,n)*(1-exp(-C3(1,n)*div)));
-    
-    Tclad(1,n)=Tclad(1,n-1)+dTclad;
-    
-    Tvap(1,n)=Tvap(1,n-1)+dTvap;
-    
-    TPT(1,n)=TPT(1,n-1)+dTPT;
+    A1(1,n)=-37/R1(1,n)/mfuel/Cpfuel
     
 end
 
