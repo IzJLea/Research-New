@@ -103,11 +103,11 @@ mPT=((DPT+(2*tPT))^2-(DPT)^2)/4*Lbund*rhoref;
 
 mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref;
 
-%% mass of fuel (single pin)
+%% mass of fuel
 
 rhofuel=10970/(1+(2.04e-5*Tref)+(8.7e-9*Tref^2));
 
-mfuel=Lbund*pi()/4*dfuel^2*rhofuel;
+mfuel=Lbund*pi()/4*dfuel^2*rhofuel*37;
 
 %% calculate values for k for each section
 
@@ -194,6 +194,10 @@ Tfuel=zeros(1,ind);
 
 dTfuel=zeros(1,ind);
 
+TCT=zeros(1,ind);
+
+dTCT=zeros(1,ind);
+
 Reynolds=zeros(1,ind);
 
 Prandtl=zeros(1,ind);
@@ -212,6 +216,8 @@ Cpclad=zeros(1,ind);
 
 CpPT=zeros(1,ind);
 
+CpCT=zeros(1,ind);
+
 Cpvap=zeros(1,ind);
 
 Cpfuel=zeros(1,ind);
@@ -222,7 +228,7 @@ A1=zeros(1,ind);
     
 B1=zeros(1,ind);
     
-E1=zeros(1,ind);
+F1=zeros(1,ind);
     
 A2=zeros(1,ind);
     
@@ -238,7 +244,7 @@ C3=zeros(1,ind);
     
 D3=zeros(1,ind);
 
-E3=zeros(1,ind);
+F3=zeros(1,ind);
 
 C4=zeros(1,ind);
 
@@ -246,19 +252,26 @@ D4=zeros(1,ind);
 
 E4=zeros(1,ind);
 
+D5=zeros(1,ind);
+
+E5=zeros(1,ind);
+
+F5=zeros(1,ind);
+
 Rfuel=zeros(1,ind);
 
-Rclad=zeros(1,ind);
-
 Rgap=zeros(1,ind);
-
-Rconv=zeros(1,ind);
 
 R1=zeros(1,ind);
 
 R2=zeros(1,ind);
 
-Qmod=zeros(1,ind);
+R3=zeros(1,ind);
+
+R4=zeros(1,ind);
+
+R5=zeros(1,ind);
+
 %% initial Temperatures
 
 Tvap(1,1)=XSteam('Tsat_p',Peval);
@@ -282,6 +295,8 @@ kuo2(1,1)=kUO2(Tclad(1,1))*1000;
 
 kclad(1,1)=12.767-(5.4348e-4*(Tclad(1,1)+273.15))+(8.9818e-6*(Tclad(1,1)+273.15)^2);%W/m.K
 
+
+
 Rfuel(1,1)=1/(4*pi()*kuo2(1,1));
 
 Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,1));
@@ -295,6 +310,8 @@ R1(1,1)=(Rfuel(1,1)/2)+Rgap(1,1)+(Rclad(1,1)/2);
 R2(1,1)=(Rclad(1,1)/2)+Rconv(1,1);
 
 TPT(1,1)=Tvap(1,1); % This is only temporary while Qloss is equal to zero. Once method works this needs to be changed.
+
+TCT(1,1)=Tmod;
 
 Tfuel(1,1)=Tclad(1,1)+(Qchannel*1000000/37*R1(1,1));
 
@@ -338,6 +355,8 @@ for n=2:ind
     
     CpPT(1,n)=255.66+(0.1024*(TPT(1,n-1)+273.15)); %J/kg.K
     
+    CpCT(1,n)=255.66+(0.1024*(TCT(1,n-1)+273.15));
+    
     Cpfuel(1,n)=1/3120*1000*(201296+(277767*((Tfuel(1,n-1)+273.15)/3120))+(16497*((Tfuel(1,n-1)+273.15)/3120)^2)-(1319031*((Tfuel(1,n-1)+273.15)/3120)^3)+(1614187*((Tfuel(1,n-1)+273.15)/3120)^4)-(186.27*((Tfuel(1,n-1)+273.15)/3120)^-2))/270.03;
     
     if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
@@ -369,8 +388,6 @@ for n=2:ind
     R1(1,n)=(Rfuel(1,n)/2)+Rgap(1,n)+(Rclad(1,n)/2);
 
     R2(1,n)=(Rclad(1,n)/2)+Rconv(1,n);
-    
-    Qmod(1,n)=Qloss_single_channel3_Watts(Tvap(1,n-1),Tmod,hcool(1,n),hmod,Lchannel);
     
     A1(1,n)=-37/R1(1,n)/mfuel/Cpfuel(1,n)*alpha;
     

@@ -103,11 +103,11 @@ mPT=((DPT+(2*tPT))^2-(DPT)^2)/4*Lbund*rhoref;
 
 mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref;
 
-%% mass of fuel (single pin)
+%% mass of fuel
 
 rhofuel=10970/(1+(2.04e-5*Tref)+(8.7e-9*Tref^2));
 
-mfuel=Lbund*pi()/4*dfuel^2*rhofuel;
+mfuel=Lbund*pi()/4*dfuel^2*rhofuel*37;
 
 %% calculate values for k for each section
 
@@ -124,6 +124,16 @@ reff=keff.*Rho;
 RCH=reff(3);
 
 RF=sum(reff(4:5));
+
+%% Data for CO2 thermal conductivity
+
+% CO2 thermal conductivity
+
+    kCO2=[0.01051 0.01456 0.01858 0.02257 0.02652 0.03044 0.03814 0.04565 0.05293 0.08491 0.10688 0.11522];
+
+% CO2 thermal conductivity Temperatures
+
+    kCO2Temp=[-50 0 50 100 150 200 300 400 500 1000 1500 2000];
 
 %% alpha calculation
 
@@ -194,6 +204,10 @@ Tfuel=zeros(1,ind);
 
 dTfuel=zeros(1,ind);
 
+TCT=zeros(1,ind);
+
+dTCT=zeros(1,ind);
+
 Reynolds=zeros(1,ind);
 
 Prandtl=zeros(1,ind);
@@ -208,9 +222,17 @@ kuo2=zeros(1,ind);
 
 kclad=zeros(1,ind);
 
+kPT=zeros(1,ind);
+
+kCT=zeros(1,ind);
+
+kCO2sys=zeros(1,ind);
+
 Cpclad=zeros(1,ind);
 
 CpPT=zeros(1,ind);
+
+CpCT=zeros(1,ind);
 
 Cpvap=zeros(1,ind);
 
@@ -222,7 +244,7 @@ A1=zeros(1,ind);
     
 B1=zeros(1,ind);
     
-E1=zeros(1,ind);
+F1=zeros(1,ind);
     
 A2=zeros(1,ind);
     
@@ -238,7 +260,9 @@ C3=zeros(1,ind);
     
 D3=zeros(1,ind);
 
-E3=zeros(1,ind);
+F3=zeros(1,ind);
+
+B4=zeros(1,ind);
 
 C4=zeros(1,ind);
 
@@ -246,19 +270,24 @@ D4=zeros(1,ind);
 
 E4=zeros(1,ind);
 
-Rfuel=zeros(1,ind);
+D5=zeros(1,ind);
 
-Rclad=zeros(1,ind);
+E5=zeros(1,ind);
+
+F5=zeros(1,ind);
 
 Rgap=zeros(1,ind);
-
-Rconv=zeros(1,ind);
 
 R1=zeros(1,ind);
 
 R2=zeros(1,ind);
 
-Qmod=zeros(1,ind);
+R3=zeros(1,ind);
+
+R4=zeros(1,ind);
+
+R5=zeros(1,ind);
+
 %% initial Temperatures
 
 Tvap(1,1)=XSteam('Tsat_p',Peval);
@@ -282,6 +311,8 @@ kuo2(1,1)=kUO2(Tclad(1,1))*1000;
 
 kclad(1,1)=12.767-(5.4348e-4*(Tclad(1,1)+273.15))+(8.9818e-6*(Tclad(1,1)+273.15)^2);%W/m.K
 
+
+
 Rfuel(1,1)=1/(4*pi()*kuo2(1,1));
 
 Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,1));
@@ -295,6 +326,8 @@ R1(1,1)=(Rfuel(1,1)/2)+Rgap(1,1)+(Rclad(1,1)/2);
 R2(1,1)=(Rclad(1,1)/2)+Rconv(1,1);
 
 TPT(1,1)=Tvap(1,1); % This is only temporary while Qloss is equal to zero. Once method works this needs to be changed.
+
+TCT(1,1)=Tmod;
 
 Tfuel(1,1)=Tclad(1,1)+(Qchannel*1000000/37*R1(1,1));
 
@@ -338,6 +371,8 @@ for n=2:ind
     
     CpPT(1,n)=255.66+(0.1024*(TPT(1,n-1)+273.15)); %J/kg.K
     
+    CpCT(1,n)=255.66+(0.1024*(TCT(1,n-1)+273.15));
+    
     Cpfuel(1,n)=1/3120*1000*(201296+(277767*((Tfuel(1,n-1)+273.15)/3120))+(16497*((Tfuel(1,n-1)+273.15)/3120)^2)-(1319031*((Tfuel(1,n-1)+273.15)/3120)^3)+(1614187*((Tfuel(1,n-1)+273.15)/3120)^4)-(186.27*((Tfuel(1,n-1)+273.15)/3120)^-2))/270.03;
     
     if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
@@ -358,55 +393,67 @@ for n=2:ind
     
     kclad(1,n)=12.767-(5.4348e-4*(Tclad(1,n-1)+273.15))+(8.9818e-6*(Tclad(1,n-1)+273.15)^2); %W/m.K
     
-    Rfuel(1,n)=1/(4*pi()*kuo2(1,n));
+    kPT(1,n)=12.767-(5.4348e-4*(TPT(1,n-1)+273.15))+(8.9818e-6*(TPT(1,n-1)+273.15)^2);
     
-    Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,n));
+    kCT(1,n)=12.767-(5.4348e-4*(TCT(1,n-1)+273.15))+(8.9818e-6*(TCT(1,n-1)+273.15)^2);
+    
+    kCO2sys(1,n)=interp1(kCO2Temp,kCO2,(Tvap(1,n-1)+Tmod)/2);
+    
+    R1(1,n)=(1/8/pi()/kuo2(1,n)/Lchannel)+Rgap(1,n)+(log(roc/ric)/4/pi()/kclad(1,n)/Lchannel);
 
-    Rgap(1,n)=0;
-
-    Rconv(1,n)=1/(Afuel/37*hcool(1,n));
-
-    R1(1,n)=(Rfuel(1,n)/2)+Rgap(1,n)+(Rclad(1,n)/2);
-
-    R2(1,n)=(Rclad(1,n)/2)+Rconv(1,n);
+    R2(1,n)=(log(roc/ric)/4/pi()/kclad(1,n-1)/Lchannel)+(1/hcool(1,n)/Afuel);
     
-    Qmod(1,n)=Qloss_single_channel3_Watts(Tvap(1,n-1),Tmod,hcool(1,n),hmod,Lchannel);
+    R3(1,n)=(1/hcool(1,n)/Aipt)+(log(ropt/ript)/4/pi()/kPT(1,n)/Lchannel);
     
-    A1(1,n)=-37/R1(1,n)/mfuel/Cpfuel(1,n)*alpha;
+    R4(1,n)=(log(ropt/ript)/4/pi()/kPT(1,n)/Lchannel)+(log(rict/ropt)/2/pi()/kCO2sys(1,n)/Lchannel)+(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel);
     
-    B1(1,n)=37/R1(1,n)/mfuel/Cpfuel(1,n)*alpha;
+    R5(1,n)=(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel)+(1/hcool(1,n)/Aoct);
     
-    E1(1,n)=Qchannel*1000000/mfuel/Cpfuel(1,n)*alpha;
+    A1(1,n)=-37/R1(1,n)/mfuel/Cpfuel(1,n);
     
-    A2(1,n)=37/mclad/Cpclad(1,n)/R1(1,n)*alpha;
+    B1(1,n)=37*Tclad(1,n-1)/R1(1,n)/mfuel/Cpfuel(1,n);
     
-    B2(1,n)=-alpha/mclad/Cpclad(1,n)*((37/(R1(1,n)+R2(1,n)))+(hrad(1,n)*Afuel/2));
+    F1(1,n)=Qchannel*1000000/mfuel/Cpfuel(1,n);
     
-    C2(1,n)=37/mclad/Cpclad(1,n)/R2(1,n)*alpha;
+    A2(1,n)=37*Tfuel(1,n-1)/mclad/Cpclad(1,n)/R1(1,n);
     
-    D2(1,n)=hrad(1,n)*Afuel/2/mclad/Cpclad(1,n)*alpha;
+    B2(1,n)=-1/mclad/Cpclad(1,n)*((37/R1(1,n))+(37/R2(1,n))+(hrad(1,n)*Afuel/2));
     
-    B3(1,n)=37/mflow/Cpvap(1,n)/R2(1,n)*alpha;
+    C2(1,n)=37*Tvap(1,n-1)/mclad/Cpclad(1,n)/R2(1,n);
     
-    C3(1,n)=-alpha/mflow/Cpvap(1,n)*((37/R2(1,n))+(hcool(1,n)*Aipt));
+    D2(1,n)=hrad(1,n)*Afuel/2/mclad/Cpclad(1,n)*TPT(1,n-1);
     
-    D3(1,n)=hcool(1,n)*Aipt/mflow/Cpvap(1,n)*alpha;
+    B3(1,n)=37*alpha*Tclad(1,n-1)/mflow/Cpvap(1,n)/R2(1,n)/div;
     
-    E3(1,n)=-(hout(1,n)-hin)/Cpvap(1,n);
+    C3(1,n)=-1/mflow/div/Cpvap(1,n)*((37*alpha/R2(1,n))+(1/R3(1,n)));
     
-    C4(1,n)=hcool(1,n)*Aipt/mPT/CpPT(1,n)*alpha;
+    D3(1,n)=TPT(1,n-1)/mflow/div/Cpvap(1,n);
     
-    D4(1,n)=-hcool(1,n)*Aipt/mPT/CpPT(1,n)*alpha;
+    F3(1,n)=-(hout(1,n)-hin)/Cpvap(1,n)/div;
     
-    E4(1,n)=-Qmod(1,n)/mPT/CpPT(1,n)*alpha;
+    B4(1,n)=alpha*hrad(1,n)*Afuel/2*Tclad(1,n-1);
     
-    dTfuel(1,n)=(Tfuel(1,n-1)*exp(-A1(1,n)*div))+((1-exp(-A1(1,n)*div))*(-(B1(1,n)+E1(1,n))/A1(1,n)));
+    C4(1,n)=Tvap(1,n-1)/mPT/CpPT(1,n)/R3(1,n);
+    
+    D4(1,n)=-1/mPT/CpPT(1,n)*((1/R3)+(1/R4)+(alpha*Afuel/2*hrad(1,n)));
+    
+    E4(1,n)=TCT(1,n-1)/mPT/CpPT(1,n)/R4(1,n);
+    
+    D5(1,n)=TPT(1,n-1)/R4(1,n)/mCT/CpCT(1,n);
+    
+    E5(1,n)=-1/mCT/CpCT(1,n)*((1/R4(1,n))+(1/R5(1,n)));
+    
+    F5(1,n)=Tmod/mCT/CpCT(1,n)/R5(1,n);
+    
+    dTfuel(1,n)=(Tfuel(1,n-1)*exp(-A1(1,n)*div))+((1-exp(-A1(1,n)*div))*(-(B1(1,n)+F1(1,n))/A1(1,n)));
     
     dTclad(1,n)=(Tclad(1,n-1)*exp(-B2(1,n)*div))+((1-exp(-B2(1,n)*div))*(-(A2(1,n)+C2(1,n)+D2(1,n))/B2(1,n)));
     
-    dTvap(1,n)=(Tvap(1,n-1)*exp(-C3(1,n)*div))+((1-exp(-C3(1,n)*div))*(-(B3(1,n)+D3(1,n)+E3(1,n))/C3(1,n)));
+    dTvap(1,n)=(Tvap(1,n-1)*exp(-C3(1,n)*div))+((1-exp(-C3(1,n)*div))*(-(B3(1,n)+D3(1,n)+F3(1,n))/C3(1,n)));
     
-    dTPT(1,n)=(TPT(1,n-1)*exp(-D4(1,n)*div))+((1-exp(-D4(1,n)*div))*(-(C4(1,n)+E4(1,n))/D4(1,n)));
+    dTPT(1,n)=
+    
+    dCT(1,n)=
     
     Tfuel(1,n)=Tfuel(1,n-1)+dTfuel(1,n);
     
@@ -415,6 +462,8 @@ for n=2:ind
     Tvap(1,n)=Tvap(1,n-1)+dTvap(1,n);
     
     TPT(1,n)=TPT(1,n-1)+dTPT(1,n);
+    
+    TCT(1,n)=TCT(1,n-1)+dTCT(1,n);
     
 end
 
