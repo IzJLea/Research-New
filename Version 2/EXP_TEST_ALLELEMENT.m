@@ -7,7 +7,7 @@ H=0; %m
 
 hmod=1000; %W/m^2.K
 
-Tenter=100; %C
+Tenter=100; %C 
 
 PSH=210; %kPa
 
@@ -137,15 +137,15 @@ RF=sum(reff(4:5));
 
 %% alpha calculation
 
-alpha=0;
+alpha=0; %initial vapor fraction guess
 
-x=(XSteam('h_pT',Peval,Tenter)-XSteam('hL_p',Peval))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
+x=(XSteam('h_pT',Peval,Tenter)-XSteam('hL_p',Peval))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)); %thermodynamic quality
 
-wsmx=Qchannel*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
+wsmx=Qchannel*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)); %maximum steam mass flow
 
 d=0.01; %dampening factor
 
-delta=0.1;
+delta=0.1; %difference in alpha value per iteration
 
 while delta>=0.0001
     
@@ -288,6 +288,10 @@ R4=zeros(1,ind);
 
 R5=zeros(1,ind);
 
+CH=zeros(5,ind);
+
+Mcool=zeros(1,ind);
+
 %% initial Temperatures
 
 Tvap(1,1)=XSteam('Tsat_p',Peval);
@@ -309,13 +313,11 @@ Tclad(1,1)=(Qbundle*1000000/Afuel/hcool(1,1))+Tvap(1,1);
 
 kuo2(1,1)=kUO2(Tclad(1,1))*1000;
 
-kclad(1,1)=12.767-(5.4348e-4*(Tclad(1,1)+273.15))+(8.9818e-6*(Tclad(1,1)+273.15)^2);%W/m.K
+kclad(1,1)=12.767-(5.4348e-4*(Tclad(1,1)+273.15))+(8.9818e-6*(Tclad(1,1)+273.15)^2); %W/m.K
 
+Rfuel(1,1)=1/(4*pi()*kuo2(1,1)*Lchannel);
 
-
-Rfuel(1,1)=1/(4*pi()*kuo2(1,1));
-
-Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,1));
+Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,1)*Lchannel);
 
 Rgap(1,1)=0;
 
@@ -338,7 +340,6 @@ for n=2:ind
     if Tvap(1,n-1)==XSteam('Tsat_p',Peval)
         
        Reynolds(1,n)=mflow*Dh/Aflow/alpha/XSteam('my_pT',Peval,Tvap(1,1)+0.1);
-       
        
        Prandtl(1,n)=XSteam('Cp_pT',Peval,Tvap(1,1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(1,1)+0.1)/XSteam('tc_pT', Peval,Tvap(1,1)+0.1);
     else
@@ -365,7 +366,7 @@ for n=2:ind
     
      
     
-    hrad(1,n)=sigma*((Tclad(1,n-1)+273.15)+(TPT(1,n-1)+273.15))*(((Tclad(1,n-1)+273.15)^2)+((TPT(1,n-1)+273.15)^2))/((1/eclad)+((1-eclad)/eclad*Afuel/2/Aipt));
+    hrad(1,n)=sigma*((Tclad(1,n-1)+273.15)+(TPT(1,n-1)+273.15))*(((Tclad(1,n-1)+273.15)^2)+((TPT(1,n-1)+273.15)^2))/((1/eclad)+((1-eclad)/eclad*Afuel*9/37/Aipt));
     
     Cpclad(1,n)=255.66+(0.1024*(Tclad(1,n-1)+273.15)); %J/kg.K
     
@@ -373,7 +374,9 @@ for n=2:ind
     
     CpCT(1,n)=255.66+(0.1024*(TCT(1,n-1)+273.15));
     
-    Cpfuel(1,n)=1/3120*1000*(201296+(277767*((Tfuel(1,n-1)+273.15)/3120))+(16497*((Tfuel(1,n-1)+273.15)/3120)^2)-(1319031*((Tfuel(1,n-1)+273.15)/3120)^3)+(1614187*((Tfuel(1,n-1)+273.15)/3120)^4)-(186.27*((Tfuel(1,n-1)+273.15)/3120)^-2))/270.03;
+    tau=(Tfuel(1,n-1)+273.15)/1000;
+    
+    Cpfuel(1,n)=(52.1743+(87.951*tau)-(85.2411*tau^2)+(31.542*tau^3)-(2.6334*tau^4)-(0.71391*tau^-2))/270.03*1000; %J/kg.K
     
     if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
     
@@ -398,16 +401,25 @@ for n=2:ind
     kCT(1,n)=12.767-(5.4348e-4*(TCT(1,n-1)+273.15))+(8.9818e-6*(TCT(1,n-1)+273.15)^2);
     
     kCO2sys(1,n)=interp1(kCO2Temp,kCO2,(Tvap(1,n-1)+Tmod)/2);
+    if Tvap(n-1)==XSteam('Tsat_p',Peval)
+        
+        Mcool(1,n)=XSteam('rho_pT',Peval,Tvap(1,n-1)+0.1)*Aflow*Lchannel;
+    else
+        
+        Mcool(1,n)=XSteam('rho_pT',Peval,Tvap(1,n-1)+0.1)*Aflow*Lchannel;
+    end
+    
+        
     
     R1(1,n)=(1/8/pi()/kuo2(1,n)/Lchannel)+Rgap(1,n)+(log(roc/ric)/4/pi()/kclad(1,n)/Lchannel);
 
-    R2(1,n)=(log(roc/ric)/4/pi()/kclad(1,n-1)/Lchannel)+(1/hcool(1,n)/Afuel);
+    R2(1,n)=(log(roc/ric)/4/pi()/kclad(1,n)/Lchannel)+(1/hcool(1,n)/Afuel);
     
     R3(1,n)=(1/hcool(1,n)/Aipt)+(log(ropt/ript)/4/pi()/kPT(1,n)/Lchannel);
     
     R4(1,n)=(log(ropt/ript)/4/pi()/kPT(1,n)/Lchannel)+(log(rict/ropt)/2/pi()/kCO2sys(1,n)/Lchannel)+(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel);
     
-    R5(1,n)=(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel)+(1/hcool(1,n)/Aoct);
+    R5(1,n)=(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel)+(1/hmod/Aoct);
     
     A1(1,n)=-37/R1(1,n)/mfuel/Cpfuel(1,n);
     
@@ -423,19 +435,19 @@ for n=2:ind
     
     D2(1,n)=hrad(1,n)*Afuel/2/mclad/Cpclad(1,n)*TPT(1,n-1);
     
-    B3(1,n)=37*alpha*Tclad(1,n-1)/mflow/Cpvap(1,n)/R2(1,n)/div;
+    B3(1,n)=37*Tclad(1,n-1)/Mcool(1,n)/Cpvap(1,n)/R2(1,n);
     
-    C3(1,n)=-1/mflow/div/Cpvap(1,n)*((37*alpha/R2(1,n))+(1/R3(1,n)));
+    C3(1,n)=-1/Mcool(1,n)/Cpvap(1,n)*((37/R2(1,n))+(1/R3(1,n)));
     
-    D3(1,n)=TPT(1,n-1)/mflow/div/Cpvap(1,n);
+    D3(1,n)=TPT(1,n-1)/Mcool(1,n)/Cpvap(1,n)/R3(1,n);
     
-    F3(1,n)=-(hout(1,n)-hin)/Cpvap(1,n)/div;
+    F3(1,n)=mflow/alpha/Mcool(1,n)*(hout(1,n)-hin)/Cpvap(1,n);
     
-    B4(1,n)=alpha*hrad(1,n)*Afuel/2*Tclad(1,n-1);
+    B4(1,n)=hrad(1,n)*Afuel/2*Tclad(1,n-1)/mPT/CpPT(1,n);
     
     C4(1,n)=Tvap(1,n-1)/mPT/CpPT(1,n)/R3(1,n);
     
-    D4(1,n)=-1/mPT/CpPT(1,n)*((1/R3(1,n))+(1/R4(1,n))+(alpha*Afuel/2*hrad(1,n)));
+    D4(1,n)=-1/mPT/CpPT(1,n)*((1/R3(1,n))+(1/R4(1,n))+(Afuel/2*hrad(1,n)));
     
     E4(1,n)=TCT(1,n-1)/mPT/CpPT(1,n)/R4(1,n);
     
@@ -447,23 +459,62 @@ for n=2:ind
     
     dTfuel(1,n)=(Tfuel(1,n-1)*exp(-A1(1,n)*div))+((1-exp(-A1(1,n)*div))*(-(B1(1,n)+F1(1,n))/A1(1,n)));
     
+    ch1=isreal(dTfuel(1,n));
+    
+    if ch1==0
+        display('dTfuel');
+        break
+    end
+    
     dTclad(1,n)=(Tclad(1,n-1)*exp(-B2(1,n)*div))+((1-exp(-B2(1,n)*div))*(-(A2(1,n)+C2(1,n)+D2(1,n))/B2(1,n)));
+    
+    ch2=isreal(dTclad(1,n));
+    
+    if ch2==0
+        display('dTclad');
+        break
+    end
+    
     
     dTvap(1,n)=(Tvap(1,n-1)*exp(-C3(1,n)*div))+((1-exp(-C3(1,n)*div))*(-(B3(1,n)+D3(1,n)+F3(1,n))/C3(1,n)));
     
+    
+    ch3=isreal(dTvap(1,n));
+    
+    if ch3==0
+        display('dTvap');
+        break
+    end
+        
     dTPT(1,n)=(TPT(1,n-1)*exp(-D4(1,n)*div))+((1-exp(-D4(1,n)*div))*(-(B4(1,n)+C4(1,n)+E4(1,n))/D4(1,n)));
+    
+    ch4=isreal(dTPT(1,n));
+    
+    if ch4==0
+        display('dTPT');
+        break
+    end
     
     dTCT(1,n)=(TCT(1,n-1)*exp(-E5(1,n)*div))+((1-exp(-E5(1,n)*div))*(-(D5(1,n)+F5(1,n))/E5(1,n)));
     
-    Tfuel(1,n)=Tfuel(1,n-1)+dTfuel(1,n);
+    ch5=isreal(dTCT(1,n));
     
-    Tclad(1,n)=Tclad(1,n-1)+dTclad(1,n);
+    if ch5==0
+        display('dTCT');
+        break
+    end
     
-    Tvap(1,n)=Tvap(1,n-1)+dTvap(1,n);
+    Tfuel(1,n)=dTfuel(1,n);
     
-    TPT(1,n)=TPT(1,n-1)+dTPT(1,n);
+    Tclad(1,n)=dTclad(1,n);
     
-    TCT(1,n)=TCT(1,n-1)+dTCT(1,n);
+    Tvap(1,n)=dTvap(1,n);
+    
+    TPT(1,n)=dTPT(1,n);
+    
+    TCT(1,n)=dTCT(1,n);
+    
+    CH(1:5,n)=[Tfuel(1,n); Tclad(1,n); Tvap(1,n); TPT(1,n); TCT(1,n)];
     
 end
 
