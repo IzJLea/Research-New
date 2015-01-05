@@ -1,11 +1,8 @@
-%% Initial channel properties 
-% included in this section are the physical specifications of the channel
-% at the beginning of the simulation and any calculations needed to
-% determine essential properties such as mass of elements, flow resistances
-% etc...
+function SF=SteamFlow(Time,Power)
 
+Ts=Time*3600;
 
-Qchannel=.150; %MW channel power
+Qchannel=Power*(0.095*Ts^-0.26); %MW channel power
 
 H=0; %m height difference from inlet/outlet headers
 
@@ -1771,7 +1768,7 @@ muvaptemp=[890.00
 % creates property matrices for the major variables used in the simulation
 
 
-Time=1000;  %seconds total run time
+Time=3000;  %seconds total run time
 
 div=0.1; %s time step length
 
@@ -2177,7 +2174,7 @@ for n=2:ind
     
 end
 
-    Tc=[Tfuel;Tclad;Tvap;TPT;TCT];
+
+    TF=[Tfuel;Tclad;Tvap;TPT;TCT;time];
     
-   plot(time,Tc)
-   
+    SF=num2cell(TF);
