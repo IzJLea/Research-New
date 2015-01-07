@@ -1,8 +1,11 @@
-%% Channel properties
-% Based on CANDU 6 under decay power 
-Qchannel=.150; %MW channel power
+%% Initial channel properties 
+% included in this section are the physical specifications of the channel
+% at the beginning of the simulation and any calculations needed to
+% determine essential properties such as mass of elements, flow resistances
+% etc...
 
-section=1;
+
+Qchannel=.150; %MW channel power
 
 H=0; %m height difference from inlet/outlet headers
 
@@ -38,7 +41,7 @@ ric=roc-tclad; %m inner cladding radius
 
 Lchannel=5.94; %m length of fuel channel
 
-Lbund=Lchannel/section; %m length of bundle (for this initial simulation, entire channel will be simulated as one bundle)
+Lbund=Lchannel; %m length of bundle (for this initial simulation, entire channel will be simulated as one bundle)
 
 tPT=0.00424; %m pressure tube thickness
 
@@ -75,6 +78,52 @@ rict=DCT/2; % inner calandria tube radius
 roct=rict+tCT;% outer calandria tube radius
 
 DhPT=4*Aflow/(pi()*DPT); % pressure tube hydraulic diameter
+
+%% pressure drop calculation based on density difference as well as header pressure
+
+deltaP=(PSH)-PVH+((9.81*H*(XSteam('rhoL_p',Peval)-XSteam('rhoV_p',Peval)))/1000);
+
+%% Resistance Calculation from liquid flow data
+
+DP = [165;
+262.5000;
+520.5000;
+258;
+174];  % measured reference pressure drops across the inlet feeder, end fitting, core, and exit end fitting and feeder respectively
+
+M=25.8; % kg/s reference mass flowrate
+
+Rho=780.6; %kg/m^3 coolant density at reference measurements
+
+keff=DP./(M^2); 
+
+reff=keff.*Rho;
+
+RCH=reff(3); %effective resistance of fuel channel
+
+RF=sum(reff(4:5)); %effective resistance of end fitting and feeder
+
+
+
+
+%% mass of zirc in elements
+Tref=310; % C reference temperature
+
+TrefK=Tref+273.15;
+
+rhoref=255.66+(0.1024*TrefK); %kg/m^3 reference density
+
+mclad=((doutclad)^2-(doutclad-(2*tclad))^2)/4*Lbund*rhoref; %mass of zirconium in cladding of one element
+
+mPT=((DPT+(2*tPT))^2-(DPT)^2)/4*Lbund*rhoref; %kg mass of zirconium in pressure tube
+
+mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref; %kg mass of zirconium in calandria tube
+
+%% mass of fuel
+
+rhofuel=10970/(1+(2.04e-5*Tref)+(8.7e-9*Tref^2)); %kg/m^3 reference fuel density
+
+mfuel=Lbund*pi()/4*dfuel^2*rhofuel; %kg mass of fuel within one fuel element
 
 %% CO2 thermal conductivity
 % as the correlations for CO2 properties are generally very large complex
@@ -1717,53 +1766,7 @@ muvaptemp=[890.00
 1699.0
 1700.0];
 
-%% pressure drop calculation based on density difference as well as header pressure
-
-deltaP=(PSH)-PVH+((9.81*H*(XSteam('rhoL_p',Peval)-XSteam('rhoV_p',Peval)))/1000);
-
-%% Resistance Calculation from liquid flow data
-
-DP = [165;
-262.5000;
-520.5000;
-258;
-174];  % measured reference pressure drops across the inlet feeder, end fitting, core, and exit end fitting and feeder respectively
-
-M=25.8; % kg/s reference mass flowrate
-
-Rho=780.6; %kg/m^3 coolant density at reference measurements
-
-keff=DP./(M^2); 
-
-reff=keff.*Rho;
-
-RCH=reff(3); %effective resistance of fuel channel
-
-RF=sum(reff(4:5)); %effective resistance of end fitting and feeder
-
-
-
-
-%% mass of zirc in elements
-Tref=310; % C reference temperature
-
-TrefK=Tref+273.15;
-
-rhoref=255.66+(0.1024*TrefK); %kg/m^3 reference density
-
-mclad=((doutclad)^2-(doutclad-(2*tclad))^2)/4*Lbund*rhoref; %mass of zirconium in cladding of one element
-
-mPT=((DPT+(2*tPT))^2-(DPT)^2)/4*Lbund*rhoref; %kg mass of zirconium in pressure tube
-
-mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref; %kg mass of zirconium in calandria tube
-
-%% mass of fuel
-
-rhofuel=10970/(1+(2.04e-5*Tref)+(8.7e-9*Tref^2)); %kg/m^3 reference fuel density
-
-mfuel=Lbund*pi()/4*dfuel^2*rhofuel; %kg mass of fuel within one fuel element
-
-%% Time determination, channel division
+%% Time determination and property matrix creation
 % This section sets the length of the simulation and time divisions and
 % creates property matrices for the major variables used in the simulation
 
@@ -1781,141 +1784,116 @@ for p=2:length(time)
     time(1,p)=time(1,p-1)+div;
 end
 
-%% property matrix creation
 
-Tclad=zeros(section,ind); %C cladding temperature
-
-
-
-Tvap=zeros(section,ind);%C vapor coolant temperature
+Tclad=zeros(1,ind); %C cladding temperature
 
 
 
-TPT=zeros(section,ind);%C pressure tube temperature
+Tvap=zeros(1,ind);%C vapor coolant temperature
 
 
 
-Tfuel=zeros(section,ind);%C average fuel temperature
+TPT=zeros(1,ind);%C pressure tube temperature
 
 
 
-TCT=zeros(section,ind);%C calandria tube temperature
-
-Qsection=zeros(1,section);
+Tfuel=zeros(1,ind);%C average fuel temperature
 
 
 
-Reynolds=zeros(section,ind);% reynolds number of coolant
+TCT=zeros(1,ind);%C calandria tube temperature
 
-Prandtl=zeros(section,ind);% coolant prandtl number
 
-Nusselt=zeros(section,ind);% coolant nusselt number
 
-hcool=zeros(section,ind);% coolant convective heat transfer coefficient 
+Reynolds=zeros(1,ind);% reynolds number of coolant
 
-hrad=zeros(section,ind);%W/m^2.K radiative heat transfer coefficient for cladding/pressure tube
+Prandtl=zeros(1,ind);% coolant prandtl number
 
-hrpt=zeros(section,ind);% W/m^2.K radiative heat transfer coefficient for calandria tube/pressure tube
+Nusselt=zeros(1,ind);% coolant nusselt number
 
-kuo2=zeros(section,ind);% W/m.K thermal conductivity of UO2 fuel 
+hcool=zeros(1,ind);% coolant convective heat transfer coefficient 
 
-kclad=zeros(section,ind);% W/m.K thermal conductivity of cladding
+hrad=zeros(1,ind);%W/m^2.K radiative heat transfer coefficient for cladding/pressure tube
 
-kPT=zeros(section,ind);% W/m.K pressure tube thermal conductivity
+hrpt=zeros(1,ind);% W/m^2.K radiative heat transfer coefficient for calandria tube/pressure tube
 
-kCT=zeros(section,ind);%W/m.K calandria tube thermal conductivity
+kuo2=zeros(1,ind);% W/m.K thermal conductivity of UO2 fuel 
 
-kCO2sys=zeros(section,ind);%W/m.K CO2 insulator thermal conductivity
+kclad=zeros(1,ind);% W/m.K thermal conductivity of cladding
 
-Cpclad=zeros(section,ind);%J/kg.K cladding heat capacity
+kPT=zeros(1,ind);% W/m.K pressure tube thermal conductivity
 
-CpPT=zeros(section,ind);%J/kg.K pressure tube heat capacity
+kCT=zeros(1,ind);%W/m.K calandria tube thermal conductivity
 
-CpCT=zeros(section,ind);%J/kg.K calandria tube heat capacity
+kCO2sys=zeros(1,ind);%W/m.K CO2 insulator thermal conductivity
 
-Cpvap=zeros(section,ind);%J/kg.K vapor coolant heat capacity
+Cpclad=zeros(1,ind);%J/kg.K cladding heat capacity
 
-Cpfuel=zeros(section,ind);%J/kg.K fuel heat capacity
+CpPT=zeros(1,ind);%J/kg.K pressure tube heat capacity
 
-hout=zeros(section,ind);% channel exit enthalpy
+CpCT=zeros(1,ind);%J/kg.K calandria tube heat capacity
 
-A1=zeros(section,ind);
+Cpvap=zeros(1,ind);%J/kg.K vapor coolant heat capacity
+
+Cpfuel=zeros(1,ind);%J/kg.K fuel heat capacity
+
+hout=zeros(1,ind);% channel exit enthalpy
+
+A1=zeros(1,ind);
     
-B1=zeros(section,ind);
+B1=zeros(1,ind);
     
-F1=zeros(section,ind);
+F1=zeros(1,ind);
     
-A2=zeros(section,ind);
+A2=zeros(1,ind);
     
-B2=zeros(section,ind);
+B2=zeros(1,ind);
     
-C2=zeros(section,ind);
+C2=zeros(1,ind);
     
-D2=zeros(section,ind);
+D2=zeros(1,ind);
        
-B3=zeros(section,ind);
+B3=zeros(1,ind);
     
-C3=zeros(section,ind);
+C3=zeros(1,ind);
     
-D3=zeros(section,ind);
+D3=zeros(1,ind);
 
-F3=zeros(section,ind);
+F3=zeros(1,ind);
 
-B4=zeros(section,ind);
+B4=zeros(1,ind);
 
-C4=zeros(section,ind);
+C4=zeros(1,ind);
 
-D4=zeros(section,ind);
+D4=zeros(1,ind);
 
-E4=zeros(section,ind);
+E4=zeros(1,ind);
 
-D5=zeros(section,ind);
+D5=zeros(1,ind);
 
-E5=zeros(section,ind);
+E5=zeros(1,ind);
 
-F5=zeros(section,ind);
+F5=zeros(1,ind);
 
-Rgap=zeros(section,ind); % fuel-cladding gap resistance
+Rgap=zeros(1,ind); % fuel-cladding gap resistance
 
-R1=zeros(section,ind); 
+R1=zeros(1,ind); 
 
-R2=zeros(section,ind);
+R2=zeros(1,ind);
 
-R3=zeros(section,ind);
+R3=zeros(1,ind);
 
-R4=zeros(section,ind);
+R4=zeros(1,ind);
 
-R5=zeros(section,ind);
+R5=zeros(1,ind);
 
-Mcool=zeros(section,ind); %kg mass of coolant within the channel
+CH=zeros(5,ind);
 
-xsec=zeros(1,section); %measurements for end of each evaluated section
+Mcool=zeros(1,ind); %kg mass of coolant within the channel
 
-mflow=zeros(1,section);
-
-mtotalflow=zeros(1,section);
-
-hin=zeros(section,ind);
-
-%% Determination of power per section
-%these calculations assume that power in the core has a cosine distribution
-
-sl=Lchannel/section;
-
-Qsection(1,1)=Qchannel/2*(cos(0)-cos(sl/Lchannel*pi()));
-
-xsec(1,1)=sl;
-
-for q=2:section
-    
-    xsec(1,q)=xsec(1,q-1)+sl;
-    
-    Qsection(1,q)=Qchannel/2*((cos(xsec(1,q-1)/Lchannel*pi()))-(cos(xsec(1,q)/Lchannel*pi())));
-end
-
-Qel=Qsection./37;
-
-%% initial vapor fraction calculation
+%% vapor fraction calculation
+%This section creates a loop to solve for the vapor fraction (alpha) in the
+%channel under low flow conditions
 
 alpha=0;
 
@@ -1953,244 +1931,253 @@ while delta>=0.0001
     alpha=alpha+(d*err);
     
 end
+ 
 
-Qvol=Qel./((pi()/4*dfuel^2*Lchannel)); %Volumetric heat generation per pin
 
-for p=1:section
-    
-    mflow(1,p)=Qsection(1,p)*1000*(1-alpha)/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)); % kg/s 
-    
-    mtotalflow(1,p)=sum(mflow(1,1:p));
+%% Initial property calculations
+%in this section the initial temperature for the elements and the coolant
+%are determined. The temperatures were determined using the assumption that
+%saturated fluid was previously flowing in the channel. also calculated is
+%the mass flow through the channel
 
-    Tvap(p,1)=XSteam('Tsat_p',Peval); %C initial vapor temperature (saturated)
+Qbundle=Qchannel; %due to treatment of channel as single bundle to be changed with multiple bundle model
 
-    Reynolds(p,1)=mtotalflow(1,p)*Dh/Aflow/XSteam('my_pT',Peval,Tvap(p,1)-0.1);% initial reynolds number based on liquid in channel
+Qel=Qchannel/37; % generation in one element
 
-    Prandtl(p,1)=XSteam('Cp_pT',Peval,Tvap(p,1)-0.1)*1000*XSteam('my_pT',Peval,Tvap(p,1)-0.1)/XSteam('tc_pT', Peval,Tvap(p,1)-0.1); % initial prandtl number 
+Qvol=Qel/(pi()/4*dfuel^2*Lchannel); %Volumetric heat generation per pin
 
-    if Reynolds(p,1)<=3000 % initial nusselt number includes consideration for laminar flow
-            Nusselt(p,1)=4.36;
-    else
+mflow=Qbundle*1000*(1-alpha)/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)); % kg/s 
+
+Tvap(1,1)=XSteam('Tsat_p',Peval); %C initial vapor temperature (saturated)
+
+Reynolds(1,1)=mflow*Dh/Aflow/XSteam('my_pT',Peval,Tvap(1,1)-0.1);% initial reynolds number based on liquid in channel
+
+Prandtl(1,1)=XSteam('Cp_pT',Peval,Tvap(1,1)-0.1)*1000*XSteam('my_pT',Peval,Tvap(1,1)-0.1)/XSteam('tc_pT', Peval,Tvap(1,1)-0.1); % initial prandtl number 
+
+if Reynolds(1,1)<=3000 % initial nusselt number includes consideration for laminar flow
+        Nusselt(1,1)=4.36;
+else
         
-            Nusselt(p,1)=0.023*Reynolds(p,1)^(4/5)*Prandtl(p,1)^0.4;
-    end
-
-    hcool(p,1)=Nusselt(p,1)*XSteam('tcL_p',Peval)/Dh; %J/m^2.K coolant heat transfer coefficient
-
-    Tclad(p,1)=(Qel(1,p)*1000000/Afuel/hcool(p,1))+Tvap(p,1); %C initial cladding temperature 
-
-    kuo2(p,1)=kUO2(Tclad(p,1))*1000;%W/m.K initial fuel heat capacity
-
-    kclad(p,1)=12.767-(5.4348e-4*(Tclad(p,1)+273.15))+(8.9818e-6*(Tclad(p,1)+273.15)^2); %W/m.K initial cladding heat capacity
-
-    Rfuel(1,1)=1/(4*pi()*kuo2(p,1)*sl); % resistance of entire fuel meat
-
-    Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(p,1)*sl); %resistance of cladding
-
-    Rgap(1,1)=0;% gap resistance to be ignored for now. 
-
-    Rconv(1,1)=1/(Afuel/hcool(p,1)); % covective resistance of one element
-
-    R1(p,1)=(Rfuel(1,1)/2)+Rgap(1,1)+(Rclad(1,1)/2);% resistance between Tfuel and Tclad
-
-    TPT(p,1)=Tvap(p,1); % simplified initial pressure tube temperature
-
-    TCT(p,1)=Tmod; % simplified initial calandria tube temperature
-
-    Tfuel(p,1)=Tclad(p,1)+(Qel(1,p)*1000000*R1(p,1)); % initial average fuel temperature
-
+        Nusselt(1,1)=0.023*Reynolds(1,1)^(4/5)*Prandtl(1,1)^0.4;
 end
 
-hin(1:section,1)=XSteam('hV_p',Peval)*1000; % J/kg enthalpy of steam entering voided section
+hcool(1,1)=Nusselt(1,1)*XSteam('tcL_p',Peval)/Dh; %J/m^2.K coolant heat transfer coefficient
+
+Tclad(1,1)=(Qel*1000000/Afuel/hcool(1,1))+Tvap(1,1); %C initial cladding temperature 
+
+kuo2(1,1)=kUO2(Tclad(1,1))*1000;%W/m.K initial fuel heat capacity
+
+kclad(1,1)=12.767-(5.4348e-4*(Tclad(1,1)+273.15))+(8.9818e-6*(Tclad(1,1)+273.15)^2); %W/m.K initial cladding heat capacity
+
+Rfuel(1,1)=1/(4*pi()*kuo2(1,1)*Lchannel); % resistance of entire fuel meat
+
+Rclad(1,1)=log(roc/ric)/(2*pi()*kclad(1,1)*Lchannel); %resistance of cladding
+
+Rgap(1,1)=0;% gap resistance to be ignored for now. 
+
+Rconv(1,1)=1/(Afuel/hcool(1,1)); % covective resistance of one element
+
+R1(1,1)=(Rfuel(1,1)/2)+Rgap(1,1)+(Rclad(1,1)/2);% resistance between Tfuel and Tclad
+
+TPT(1,1)=Tvap(1,1); % simplified initial pressure tube temperature
+
+TCT(1,1)=Tmod; % simplified initial calandria tube temperature
+
+Tfuel(1,1)=Tclad(1,1)+(Qel*1000000*R1(1,1)); % initial average fuel temperature
+
+hin=XSteam('hV_p',Peval)*1000; % J/kg enthalpy of steam entering voided section
+
+%% transient calculation
+%These calculations determine the five temperatures during the duration of
+%the simulation. 
 
 for n=2:ind
-    for m=1:section
-        
-        if Tvap(m,n-1)==XSteam('Tsat_p',Peval)
-        
-           Reynolds(m,n)=mtotalflow(1,m)*Dh/Aflow/alpha/XSteam('my_pT',Peval,Tvap(m,1)+0.1);
-       
-           Prandtl(m,n)=XSteam('Cp_pT',Peval,Tvap(m,1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(m,1)+0.1)/XSteam('tc_pT', Peval,Tvap(m,1)+0.1);
-        else
-            if Tvap(m,n-1)>890
-                
-                musys=interp1(muvaptemp,muvap,Tvap(m,n-1));
-            
-                Reynolds(m,n)=mtotalflow(1,m)*Dh/Aflow/alpha/musys;
-        
-                Prandtl(m,n)=XSteam('Cp_pT',Peval,Tvap(m,n-1))*1000*musys/XSteam('tc_pT', Peval,Tvap(m,n-1));
-            
-                clear musys
-            
-            else
-                Reynolds(m,n)=mtotalflow(1,m)*Dh/Aflow/alpha/XSteam('my_pT',Peval,Tvap(m,n-1));
-        
-                Prandtl(m,n)=XSteam('Cp_pT',Peval,Tvap(m,n-1))*1000*XSteam('my_pT',Peval,Tvap(m,n-1))/XSteam('tc_pT', Peval,Tvap(m,n-1));
-            end
-        end
+    % calculation of vapor heat transfer coefficient. The if loops are to
+    % get values if conditions are at saturation conditions 
     
-    if Reynolds(m,n)<=3000
+    if Tvap(1,n-1)==XSteam('Tsat_p',Peval)
         
-        Nusselt(m,n)=4.36;
-        
+       Reynolds(1,n)=mflow*Dh/Aflow/alpha/XSteam('my_pT',Peval,Tvap(1,1)+0.1);
+       
+       Prandtl(1,n)=XSteam('Cp_pT',Peval,Tvap(1,1)+0.1)*1000*XSteam('my_pT',Peval,Tvap(1,1)+0.1)/XSteam('tc_pT', Peval,Tvap(1,1)+0.1);
     else
+        if Tvap(1,n-1)>890
+            
+            musys=interp1(muvaptemp,muvap,Tvap(1,n-1));
+            
+            Reynolds(1,n)=mflow*Dh/Aflow/alpha/musys;
         
-        Nusselt(m,n)=0.023*(Reynolds(m,n)^(4/5))*(Prandtl(m,n)^0.4);
+            Prandtl(1,n)=XSteam('Cp_pT',Peval,Tvap(1,n-1))*1000*musys/XSteam('tc_pT', Peval,Tvap(1,n-1));
+            
+            clear musys
+            
+        else
+            Reynolds(1,n)=mflow*Dh/Aflow/alpha/XSteam('my_pT',Peval,Tvap(1,n-1));
+        
+            Prandtl(1,n)=XSteam('Cp_pT',Peval,Tvap(1,n-1))*1000*XSteam('my_pT',Peval,Tvap(1,n-1))/XSteam('tc_pT', Peval,Tvap(1,n-1));
+        end
     end
     
-    if Tvap(m,n-1)>XSteam('Tsat_p',Peval)
-    
-        hcool(m,n)=Nusselt(m,n)*XSteam('tc_pT',Peval,Tvap(m,n-1))/Dh;
+    if Reynolds(1,n)<=3000
+        
+        Nusselt(1,n)=4.36;
+        
     else
-        hcool(m,n)=Nusselt(m,n)*XSteam('tc_pT',Peval,Tvap(m,n-1)+0.1)/Dh;
+        
+        Nusselt(1,n)=0.023*(Reynolds(1,n)^(4/5))*(Prandtl(1,n)^0.4);
+    end
+    
+    if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
+    
+        hcool(1,n)=Nusselt(1,n)*XSteam('tc_pT',Peval,Tvap(1,n-1))/Dh;
+    else
+        hcool(1,n)=Nusselt(1,n)*XSteam('tc_pT',Peval,Tvap(1,n-1)+0.1)/Dh;
     end
     
     % heat transfer coefficient for radiation- view area of fuel pins is
     % assumed to be equal to the outer half of the 18 outer fuel pins
-    hrad(m,n)=sigma*((Tclad(m,n-1)+273.15)+(TPT(m,n-1)+273.15))*(((Tclad(m,n-1)+273.15)^2)+((TPT(m,n-1)+273.15)^2))/((1/eclad)+((1-eclad)/eclad*Arad/Aipt));
+    hrad(1,n)=sigma*((Tclad(1,n-1)+273.15)+(TPT(1,n-1)+273.15))*(((Tclad(1,n-1)+273.15)^2)+((TPT(1,n-1)+273.15)^2))/((1/eclad)+((1-eclad)/eclad*Arad/Aipt));
     
-    hrpt(m,n)=sigma*((TPT(m,n-1)+273.15)+(TCT(m,n-1)+273.15))*(((TPT(m,n-1)+273.15)^2)+((TCT(m,n-1)+273.15)^2))/((1/eclad)+((1-eclad)/eclad*Aopt/Aict));
+    hrpt(1,n)=sigma*((TPT(1,n-1)+273.15)+(TCT(1,n-1)+273.15))*(((TPT(1,n-1)+273.15)^2)+((TCT(1,n-1)+273.15)^2))/((1/eclad)+((1-eclad)/eclad*Aopt/Aict));
     
     % heat capacity calculations for main elements
-    Cpclad(m,n)=255.66+(0.1024*(Tclad(m,n-1)+273.15)); %J/kg.K
+    Cpclad(1,n)=255.66+(0.1024*(Tclad(1,n-1)+273.15)); %J/kg.K
     
-    CpPT(m,n)=255.66+(0.1024*(TPT(m,n-1)+273.15)); %J/kg.K
+    CpPT(1,n)=255.66+(0.1024*(TPT(1,n-1)+273.15)); %J/kg.K
     
-    CpCT(m,n)=255.66+(0.1024*(TCT(m,n-1)+273.15));
+    CpCT(1,n)=255.66+(0.1024*(TCT(1,n-1)+273.15));
     
-    tau=(Tfuel(m,n-1)+273.15)/1000;
+    tau=(Tfuel(1,n-1)+273.15)/1000;
     
-    Cpfuel(m,n)=(52.1743+(87.951*tau)-(85.2411*tau^2)+(31.542*tau^3)-(2.6334*tau^4)-(0.71391*tau^-2))/270.03*1000; %J/kg.K
+    Cpfuel(1,n)=(52.1743+(87.951*tau)-(85.2411*tau^2)+(31.542*tau^3)-(2.6334*tau^4)-(0.71391*tau^-2))/270.03*1000; %J/kg.K
     
-    if Tvap(m,n-1)>XSteam('Tsat_p',Peval)
+    if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
     
-        Cpvap(m,n)=XSteam('Cp_pT',Peval,Tvap(m,n-1))*1000;
+        Cpvap(1,n)=XSteam('Cp_pT',Peval,Tvap(1,n-1))*1000;
     else
-        Cpvap(m,n)=XSteam('CP_pT',Peval,Tvap(m,n-1)+0.1)*1000;
+        Cpvap(1,n)=XSteam('CP_pT',Peval,Tvap(1,n-1)+0.1)*1000;
     end
     % Exit enthalpy calculation based off of temperature of vapor in
     % previous time step
-     if Tvap(m,n-1)>XSteam('Tsat_p',Peval)
+     if Tvap(1,n-1)>XSteam('Tsat_p',Peval)
     
-        hout(m,n)=XSteam('h_pT',Peval,Tvap(m,n-1))*1000; % J/kg
+        hout(1,n)=XSteam('h_pT',Peval,Tvap(1,n-1))*1000; % J/kg
     else
-        hout(m,n)=XSteam('h_pT',Peval,Tvap(m,n-1)+0.1)*1000;
+        hout(1,n)=XSteam('h_pT',Peval,Tvap(1,n-1)+0.1)*1000;
      end
     
     
      %thermal conductivity of main elements
      
-       kuo2(m,n)=kUO2(Tfuel(m,n-1))*1000; % W/m.K
+       kuo2(1,n)=kUO2(Tfuel(1,n-1))*1000; % W/m.K
     
-    kclad(m,n)=12.767-(5.4348e-4*(Tclad(m,n-1)+273.15))+(8.9818e-6*(Tclad(m,n-1)+273.15)^2); %W/m.K
+    kclad(1,n)=12.767-(5.4348e-4*(Tclad(1,n-1)+273.15))+(8.9818e-6*(Tclad(1,n-1)+273.15)^2); %W/m.K
     
-    kPT(m,n)=12.767-(5.4348e-4*(TPT(m,n-1)+273.15))+(8.9818e-6*(TPT(m,n-1)+273.15)^2);
+    kPT(1,n)=12.767-(5.4348e-4*(TPT(1,n-1)+273.15))+(8.9818e-6*(TPT(1,n-1)+273.15)^2);
     
-    kCT(m,n)=12.767-(5.4348e-4*(TCT(m,n-1)+273.15))+(8.9818e-6*(TCT(m,n-1)+273.15)^2);
+    kCT(1,n)=12.767-(5.4348e-4*(TCT(1,n-1)+273.15))+(8.9818e-6*(TCT(1,n-1)+273.15)^2);
     
-    kCO2sys(m,n)=interp1(kCO2Temp,kCO2,(Tvap(m,n-1)+Tmod)/2);
+    kCO2sys(1,n)=interp1(kCO2Temp,kCO2,(Tvap(1,n-1)+Tmod)/2);
     
     % mass of steam in voided section
     
-    if Tvap(m,n-1)==XSteam('Tsat_p',Peval)
+    if Tvap(n-1)==XSteam('Tsat_p',Peval)
         
-        Mcool(m,n)=XSteam('rhoV_p',Peval)*Aflow*mtotalflow(1,m)*div;
+        Mcool(1,n)=mflow*div;
     else
         
-        Mcool(m,n)=XSteam('rho_pT',Peval,Tvap(m,n-1))*Aflow*mtotalflow(1,m)*div;
-    end
-    
-    if m==1
-        hin(m,n)=hin(m,n-1);
-    else
-        hin(m,n)=((mtotalflow(1,m-1)*hin(m-1,n-1))+(mflow(1,m)*hin(1,n)))/mtotalflow(1,m);
+        Mcool(1,n)=mflow*div;
     end
     
     %calculation of resistances. See accompanying document for derivations
-    R1(m,n)=(1/8/pi()/kuo2(m,n)/sl)+Rgap(m,n)+(log(roc/ric)/4/pi()/kclad(m,n)/sl);
+    R1(1,n)=(1/8/pi()/kuo2(1,n)/Lchannel)+Rgap(1,n)+(log(roc/ric)/4/pi()/kclad(1,n)/Lchannel);
 
-    R2(m,n)=(log(roc/ric)/4/pi()/kclad(m,n)/sl)+(1/hcool(m,n)/Afuel);
+    R2(1,n)=(log(roc/ric)/4/pi()/kclad(1,n)/Lchannel)+(1/hcool(1,n)/Afuel);
     
-    R3(m,n)=(1/hcool(m,n)/Aipt)+(log(ropt/ript)/4/pi()/kPT(m,n)/sl);
+    R3(1,n)=(1/hcool(1,n)/Aipt)+(log(ropt/ript)/4/pi()/kPT(1,n)/Lchannel);
     
-    R4(m,n)=(log(ropt/ript)/4/pi()/kPT(m,n)/sl)+(log(rict/ropt)/2/pi()/kCO2sys(m,n)/sl)+(log(roct/rict)/4/pi()/kCT(m,n)/sl);
+    R4(1,n)=(log(ropt/ript)/4/pi()/kPT(1,n)/Lchannel)+(log(rict/ropt)/2/pi()/kCO2sys(1,n)/Lchannel)+(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel);
     
-    R5(m,n)=(log(roct/rict)/4/pi()/kCT(m,n)/sl)+(1/hmod/Aoct);
+    R5(1,n)=(log(roct/rict)/4/pi()/kCT(1,n)/Lchannel)+(1/hmod/Aoct);
     
     %Eq.1 coefficients
     
-    A1(m,n)=-1/R1(m,n)/mfuel/Cpfuel(m,n);
+    A1(1,n)=-1/R1(1,n)/mfuel/Cpfuel(1,n);
     
-    B1(m,n)=Tclad(m,n-1)/R1(m,n)/mfuel/Cpfuel(m,n);
+    B1(1,n)=Tclad(1,n-1)/R1(1,n)/mfuel/Cpfuel(1,n);
     
-    F1(m,n)=Qel(1,m)*1000000/mfuel/Cpfuel(m,n);
+    F1(1,n)=Qel*1000000/mfuel/Cpfuel(1,n);
     
     %Eq.2 coefficients
     
-    A2(m,n)=Tfuel(m,n-1)/mclad/Cpclad(m,n)/R1(m,n);
+    A2(1,n)=Tfuel(1,n-1)/mclad/Cpclad(1,n)/R1(1,n);
     
-    B2(m,n)=-1/mclad/Cpclad(m,n)*((1/R1(m,n))+(1/R2(m,n))+(hrad(m,n)*Arad));
+    B2(1,n)=-1/mclad/Cpclad(1,n)*((1/R1(1,n))+(1/R2(1,n))+(hrad(1,n)*Arad));
     
-    C2(m,n)=Tvap(m,n-1)/mclad/Cpclad(m,n)/R2(m,n);
+    C2(1,n)=Tvap(1,n-1)/mclad/Cpclad(1,n)/R2(1,n);
     
-    D2(m,n)=hrad(m,n)*Arad/mclad/Cpclad(m,n)*TPT(m,n-1);
+    D2(1,n)=hrad(1,n)*Arad/mclad/Cpclad(1,n)*TPT(1,n-1);
     
     %Eq.3 coefficients
     
-    B3(m,n)=37*Tclad(m,n-1)/Mcool(m,n)/Cpvap(m,n)/R2(m,n);
+    B3(1,n)=37*Tclad(1,n-1)/Mcool(1,n)/Cpvap(1,n)/R2(1,n);
     
-    C3(m,n)=-1/Mcool(m,n)/Cpvap(m,n)*((37/R2(m,n))+(1/R3(m,n)));
+    C3(1,n)=-1/Mcool(1,n)/Cpvap(1,n)*((37/R2(1,n))+(1/R3(1,n)));
     
-    D3(m,n)=TPT(m,n-1)/Mcool(m,n)/Cpvap(m,n)/R3(m,n);
+    D3(1,n)=TPT(1,n-1)/Mcool(1,n)/Cpvap(1,n)/R3(1,n);
     
-    F3(m,n)=mtotalflow(1,m)/alpha/Mcool(m,n)*(hout(m,n)-hin(m,n))/Cpvap(m,n);
+    F3(1,n)=mflow/Mcool(1,n)*(hout(1,n)-hin)/Cpvap(1,n);
     
     %Eq.4 coefficients
     
-    B4(m,n)=hrad(m,n)*Arad*Tclad(m,n-1)/mPT/CpPT(m,n);
+    B4(1,n)=hrad(1,n)*Arad*Tclad(1,n-1)/mPT/CpPT(1,n);
     
-    C4(m,n)=Tvap(m,n-1)/mPT/CpPT(m,n)/R3(m,n);
+    C4(1,n)=Tvap(1,n-1)/mPT/CpPT(1,n)/R3(1,n);
     
-    D4(m,n)=-1/mPT/CpPT(m,n)*((1/R3(m,n))+(1/R4(m,n))+(Arad*hrad(m,n))+(hrpt(m,n)*Aopt));
+    D4(1,n)=-1/mPT/CpPT(1,n)*((1/R3(1,n))+(1/R4(1,n))+(Arad*hrad(1,n))+(hrpt(1,n)*Aopt));
     
-    E4(m,n)=TCT(m,n-1)/mPT/CpPT(m,n)*((1/R4(m,n))+(hrpt(m,n)*Aopt));
+    E4(1,n)=TCT(1,n-1)/mPT/CpPT(1,n)*((1/R4(1,n))+(hrpt(1,n)*Aopt));
     
     %Eq.5 coefficients
     
-    D5(m,n)=TPT(m,n-1)/mCT/CpCT(m,n)*((1/R4(m,n))+(hrpt(m,n)*Aopt));
+    D5(1,n)=TPT(1,n-1)/mCT/CpCT(1,n)*((1/R4(1,n))+(hrpt(1,n)*Aopt));
     
-    E5(m,n)=-1/mCT/CpCT(m,n)*((1/R4(m,n))+(1/R5(m,n))+(hrpt(m,n)*Aopt));
+    E5(1,n)=-1/mCT/CpCT(1,n)*((1/R4(1,n))+(1/R5(1,n))+(hrpt(1,n)*Aopt));
     
-    F5(m,n)=Tmod/mCT/CpCT(m,n)/R5(m,n);
+    F5(1,n)=Tmod/mCT/CpCT(1,n)/R5(1,n);
     
     % calculation of Temperature values
     
-    Tfuel(m,n)=(Tfuel(m,n-1)*exp(A1(m,n)*div))+((1-exp(A1(m,n)*div))*((B1(m,n)+F1(m,n))/-A1(m,n)));
+    Tfuel(1,n)=(Tfuel(1,n-1)*exp(A1(1,n)*div))+((1-exp(A1(1,n)*div))*((B1(1,n)+F1(1,n))/-A1(1,n)));
     
-    Tclad(m,n)=(Tclad(m,n-1)*exp(B2(m,n)*div))+((1-exp(B2(m,n)*div))*((A2(m,n)+C2(m,n)+D2(m,n))/-B2(m,n)));
+    Tclad(1,n)=(Tclad(1,n-1)*exp(B2(1,n)*div))+((1-exp(B2(1,n)*div))*((A2(1,n)+C2(1,n)+D2(1,n))/-B2(1,n)));
     
-    Tvap(m,n)=(Tvap(m,n-1)*exp(C3(m,n)*div))+((1-exp(C3(m,n)*div))*((B3(m,n)+D3(m,n)+F3(m,n))/-C3(m,n)));
+    Tvap(1,n)=(Tvap(1,n-1)*exp(C3(1,n)*div))+((1-exp(C3(1,n)*div))*((B3(1,n)+D3(1,n)+F3(1,n))/-C3(1,n)));
     
-    TPT(m,n)=(TPT(m,n-1)*exp(D4(m,n)*div))+((1-exp(D4(m,n)*div))*((B4(m,n)+C4(m,n)+E4(m,n))/-D4(m,n)));
+    TPT(1,n)=(TPT(1,n-1)*exp(D4(1,n)*div))+((1-exp(D4(1,n)*div))*((B4(1,n)+C4(1,n)+E4(1,n))/-D4(1,n)));
     
-    TCT(m,n)=(TCT(m,n-1)*exp(E5(m,n)*div))+((1-exp(E5(m,n)*div))*((D5(m,n)+F5(m,n))/-E5(m,n)));
+    TCT(1,n)=(TCT(1,n-1)*exp(E5(1,n)*div))+((1-exp(E5(1,n)*div))*((D5(1,n)+F5(1,n))/-E5(1,n)));
     
-    if isnan(Tfuel(m,n))
+    if isnan(Tfuel(1,n))
         display('Tfuel')
         break
-    elseif isnan(Tclad(m,n))
+    elseif isnan(Tclad(1,n))
         display('Tclad')
         break
-    elseif isnan(Tvap(m,n))
+    elseif isnan(Tvap(1,n))
         display('Tvap')
         break
-    elseif isnan(TPT(m,n))
+    elseif isnan(TPT(1,n))
         display('TPT')
         break
-    elseif isnan(TCT(m,n))
+    elseif isnan(TCT(1,n))
         display('TCT')
         break
     end
-    end
+    
 end
 
+    Tc=[Tfuel;Tclad;Tvap;TPT;TCT];
+    
+   plot(time,Tc)
+   
