@@ -1,5 +1,9 @@
 function res=Rcool(Tcool,Afuel,Dh,Mflux,Peval)
 
+if Tcool==XSteam('Tsat_p',Peval)
+    Tcool=Tcool+0.1;
+end
+
 Reynolds=Mflux*Dh/XSteam('my_pT',Peval,Tcool);
     
     Prandtl=XSteam('Cp_pT',Peval,Tcool)*1000*XSteam('my_pT',Peval,Tcool)/XSteam('tc_pT', Peval,Tcool);
@@ -15,7 +19,8 @@ Reynolds=Mflux*Dh/XSteam('my_pT',Peval,Tcool);
     
     hcool=Nusselt*XSteam('tcL_T',Tcool)/Dh; %W/m^2/K
     
-    res=1/(hcool*Afuel*37);
+    res=1/(hcool*Afuel);
+end
     
     
     

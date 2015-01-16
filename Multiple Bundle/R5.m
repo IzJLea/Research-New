@@ -1,5 +1,7 @@
-function res=R5(TCT,Tmod,rict,roct,Aopt,hmod,length)
+function res=R5(TCT,Tmod,rict,roct,hmod,length)
 
-res=0.5*Rzirc(TCT,rict,roct,length)+Rmod(Tmod,Aopt,hmod);
+Aoct=2*pi()*roct*length;
+
+res=0.5*Rzirc(TCT,rict,roct,length)+Rmod(Tmod,Aoct,hmod);
 
 end
