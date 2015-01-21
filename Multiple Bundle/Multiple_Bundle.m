@@ -123,9 +123,9 @@ mfuel=Lbund*pi()/4*dfuel^2*rhoUO2(Tref); %kg mass of fuel within one fuel elemen
 %% Time determination 
 % This section sets the length of the simulation and time divisions an
 
-Time=1000;  %seconds total run time
+Time=10000;  %seconds total run time
 
-div=0.1; %s time step length
+div=10; %s time step length
 
 ind=Time/div; % index to determine time step number
 
@@ -150,49 +150,17 @@ Tfuel=zeros(bunds,ind);%C average fuel temperature
 
 TCT=zeros(bunds,ind);%C calandria tube temperature
 
-%Material properties
-
-kuo2=zeros(bunds,ind);% W/m.K thermal conductivity of UO2 fuel 
-
-kclad=zeros(bunds,ind);% W/m.K thermal conductivity of cladding
-
-kPT=zeros(bunds,ind);% W/m.K pressure tube thermal conductivity
-
-kCT=zeros(bunds,ind);%W/m.K calandria tube thermal conductivity
-
-kCO2sys=zeros(bunds,ind);%W/m.K CO2 insulator thermal conductivity
-
-Cpclad=zeros(bunds,ind);%J/kg.K cladding heat capacity
-
-CpPT=zeros(bunds,ind);%J/kg.K pressure tube heat capacity
-
-CpCT=zeros(bunds,ind);%J/kg.K calandria tube heat capacity
-
-Cpvap=zeros(bunds,ind);%J/kg.K vapor coolant heat capacity
-
-Cpfuel=zeros(bunds,ind);%J/kg.K fuel heat capacity
-
-% Heat transfer properties
-
-Reynolds=zeros(bunds,ind);% reynolds number of coolant
-
-Prandtl=zeros(bunds,ind);% coolant prandtl number
-
-Nusselt=zeros(bunds,ind);% coolant nusselt number
-
-hcool=zeros(bunds,ind);% coolant convective heat transfer coefficient 
-
-hrad=zeros(bunds,ind);%W/m^2.K radiative heat transfer coefficient for cladding/pressure tube
-
-hrpt=zeros(bunds,ind);% W/m^2.K radiative heat transfer coefficient for calandria tube/pressure tube
+%Enthalpies
 
 hin=zeros(bunds,ind);
 
 hout=zeros(bunds,ind);% channel exit enthalpy
 
-hfluid=zeros(bunds,ind);
+houtvap=zeros(bunds,ind);
 
-hvap=zeros(bunds,ind);
+hinvap=zeros(bunds,ind);
+
+Mfluxvap=zeros(bunds,ind);
 
 %Calculation Constants
 
@@ -234,13 +202,7 @@ F5=zeros(bunds,ind);
 
 %Miscellaneous
 
-CH=zeros(5,ind);
-
-Mcool=zeros(bunds,ind); %kg mass of coolant within the channel
-
 Qel=zeros(1,bunds);
-
-mvap=zeros(1,bunds);
 
 Alphas=zeros(bunds,ind);
 %% Power profile calculation
@@ -299,35 +261,6 @@ Mflux=(1-alpha)*Qchannel*1000/(XSteam('hV_p',Peval)-XSteam('h_pT',Peval,Tenter))
 
 mflow=Mflux*Aflow*alpha;
 
-%initial alpha values. Liquid inventory/enthalpy is main variable
-
-hin(1,1:ind)=XSteam('h_pT',Peval,Tenter)*1000;
-
-hout(1,1)=hin(1,1)+(Bundpower(1,1)/mflow);
-
-if hout(1,1)>=XSteam('hL_p',Peval)*1000
-    Alphas(1,1)=(Bundpower(1,1)+(alpha*Mflux*Aflow*hin(1,1))-(Mflux*Aflow*XSteam('hL_p',Peval)*1000))/((Mflux*Aflow*XSteam('hV_p',Peval)*1000)-(Mflux*Aflow*XSteam('hL_p',Peval)*1000)+Bundpower(1,1));
-    
-    hout(1,1)=(Alphas(1,1)*XSteam('hV_p',Peval))+((1-Alphas(1,1)*XSteam('hL_p',Peval)))*1000;
-end
-
-
-
-for p=2:bunds
-    
-    hin(p,1)=hout(p-1,1);
-    
-    hout(p,1)=hin(p,1)+(Bundpower(1,p)/mflow);
-    
-    if hout(p,1)>=XSteam('hL_p',Peval)*1000
-        
-        Alphas(p,1)=((Bundpower(1,p)/mflow)+hin(p,1)-(1000*XSteam('hL_p',Peval)))/((1000*(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)))+(Bundpower(1,p)/mflow));
-    
-        hout(p,1)=1000*((Alphas(p,1)*XSteam('hV_p',Peval))+((1-Alphas(p,1))*XSteam('hL_p',Peval)));
-    end
-end
-        
-        
 %% Initial property calculations
 %in this section the initial temperature for the elements and the coolant
 %are determined. The temperatures were determined using the assumption that
@@ -339,90 +272,189 @@ for m=1:bunds
         
     Tvap(m,1)=XSteam('Tsat_p',Peval);
     
-    Tclad(m,1)=(Qel(1,m)/R2(Tvap(m,1),Tvap(m,1),Tvap(m,1),Afuel,Arad,Aipt,Dh,Mflux,Peval,ric,roc,Lbund))+Tvap(m,1);
+    Tclad(m,1)=(Qel(1,m)*R2(Tvap(m,1),Tvap(m,1),Tvap(m,1),Afuel,Arad,Aipt,Dh,Mflux,Peval,ric,roc,Lbund))+Tvap(m,1);
  
     Tfuel(m,1)=(Qel(1,m)*R1(Tclad(m,1),Tclad(m,1),ric,roc,Lbund))+Tclad(m,1);
     
-    TPT(m,1)=Tvap(m,1)-(Qloss(Tvap(m,1),Tvap(m,1),Tmod,Tmod,ript,ropt,rict,roct,Dh,Lbund,Mflux,Peval)/R3(Tvap(m,1),Tvap(m,1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval));
+    TPT(m,1)=Tvap(m,1)-(Qloss(Tvap(m,1),Tvap(m,1),Tmod,Tmod,ript,ropt,rict,roct,hmod,Dh,Lbund,Mflux,Peval)*R3(Tvap(m,1),Tvap(m,1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval));
     
-    TCT(m,1)=(Qloss(Tvap(m,1),Tvap(m,1),Tmod,Tmod,ript,ropt,rict,roct,Lbund,Mflux,Peval)/R5(Tmod,Tmod,rict,roct,Aopt,hmod,Lbund))+Tmod;       
+    TCT(m,1)=(Qloss(Tvap(m,1),Tvap(m,1),Tmod,Tmod,ript,ropt,rict,roct,hmod,Dh,Lbund,Mflux,Peval)*R5(Tmod,rict,roct,hmod,Lbund))+Tmod;       
 end
+
+%% initial alpha values. Liquid inventory/enthalpy is main variable
+
+hin(1,1:ind)=XSteam('h_pT',Peval,Tenter)*1000;
+
+hout(1,1)=hin(1,1)+(Bundpower(1,1)/mflow);
+
+if hout(1,1)>=XSteam('hL_p',Peval)*1000
+    Alphas(1,1)=(Bundpower(1,1)+(alpha*Mflux*Aflow*hin(1,1))-(Mflux*Aflow*XSteam('hL_p',Peval)*1000))/((Mflux*Aflow*XSteam('hV_p',Peval)*1000)-(Mflux*Aflow*XSteam('hL_p',Peval)*1000)+Bundpower(1,1));
+    
+    hout(1,1)=hin(1,1)+(Bundpower(1,1)*Alphas(1,1)/mflow);
+    
+    Mfluxvap(1,1)=(1-Alphas(1,1))*Bundpower(1,1)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(1,1)*Aflow);
+    
+    houtvap(1,1)=XSteam('hV_p',Peval)*1000;
+    
+    if Alphas(1,1)~=0
+        
+        hinvap(1,1)=XSteam('hV_p',Peval)*1000;
+    end
+    
+end
+
+for p=2:bunds
+    
+    hin(p,1)=hout(p-1,1);
+    
+    hinvap(p,1)=houtvap(p-1,1);
+    
+    hout(p,1)=hin(p,1)+(Bundpower(1,p)/mflow);
+    
+    if hout(p,1)>=XSteam('hL_p',Peval)*1000
+        
+        Alphas(p,1)=((Bundpower(1,p)/mflow)+hin(p,1)-(1000*XSteam('hL_p',Peval)))/((1000*(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)))+(Bundpower(1,p)/mflow));
+    
+        hout(p,1)=1000*((Alphas(p,1)*XSteam('hV_p',Peval))+((1-Alphas(p,1))*XSteam('hL_p',Peval)));
+        
+        houtvap(p,1)=XSteam('hV_p',Peval)*1000;
+        
+        if Alphas(p,1)~=0
+        
+            hinvap(p,1)=XSteam('hV_p',Peval)*1000;
+        end
+        
+        Mfluxvap(p,1)=(1-Alphas(p,1))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,1)*Aflow)+Mfluxvap(p-1,1);
+    end
+end
+        
+        
+
 
 %%
 
 for n=2:ind
-    for p=1:bunds
-        
-        hout(p,n)=hin(p,n-1)+(Bundpower(1,p)/mflow);
-        
-        
+    for p=1:bunds        
             if p>1
                 
                 hin(p,n)=hout(p-1,n);
+                
+                if Alphas(p,n-1)~=0
+                    hinvap(p,n)=XSteam('hV_p',Peval)*1000;
+                else
+                    hinvap(p,n)=houtvap(p-1,n);
+                end
+                
+                
+                
             end
         
-        if hout(p,n)<=XSteam('hL_p',Peval)*1000
+            
+            hout(p,n)=hin(p,n)+(Bundpower(1,p)/mflow);
+            
+            Tvap(p,n)=XSteam('T_ph',Peval,(hout(p,n)/1000));
+            
+            Tclad(p,n)=(Qel(1,p)*R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mflux,Peval,ric,roc,Lbund))+Tvap(p,n);
+            
+            Tfuel(p,n)=(Qel(1,p)*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund))+Tclad(p,n);
+            
+            TPT(p,n)=Tvap(p,n)-(Qloss(Tvap(p,n-1),TPT(p,n-1),TCT(p,n-1),Tmod,ript,ropt,rict,roct,hmod,Dh,Lbund,Mflux,Peval)*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval));
+            
+            TCT(p,n)=(Qloss(Tvap(p,n-1),TPT(p,n-1),TCT(p,n-1),Tmod,ript,ropt,rict,roct,hmod,Dh,Lbund,Mflux,Peval)*R5(TCT(p,n-1),rict,roct,hmod,Lbund))+Tmod;
+                        
+        if hout(p,n)>=XSteam('hL_p',Peval)*1000
+            
+            if Tvap(p,n-1)==XSteam('Tsat_p',Peval)
+                Tvap(p,n-1)=Tvap(p,n-1)+0.1;
+            end
+            
             %% Temperature calculation coefficients
             % Fuel temperature
-            A1=-inv(mfuel*CpUO2(Tfuel(p,n-1))*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund));
+            A1(p,n)=-inv(mfuel*CpUO2(Tfuel(p,n-1))*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund));
             
-            B1=Tclad(p,n-1)/(mfuel*CpUO2(Tfuel(p,n-1))*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund));
+            B1(p,n)=Tclad(p,n-1)/(mfuel*CpUO2(Tfuel(p,n-1))*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund));
             
-            F1=Qel(1,p)/(mfuel*CpUO2(Tfuel(p,n-1)));
+            F1(p,n)=Qel(1,p)/(mfuel*CpUO2(Tfuel(p,n-1)));
             
             % Cladding Temperature
             
-            A2=Tfuel(p,n-1)/(mclad*CpZirc(Tclad(p,n-1))*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund));
+            A2(p,n)=Tfuel(p,n-1)/(mclad*CpZirc(Tclad(p,n-1))*R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund));
             
-            B2=-1/(mclad*CpZirc(Tclad(p,n-1)))*(inv(R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund))+inv(R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mflux,Peval,ric,roc,Lbund)));
+            B2(p,n)=-1/(mclad*CpZirc(Tclad(p,n-1)))*(inv(R1(Tfuel(p,n-1),Tclad(p,n-1),ric,roc,Lbund))+inv(R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund)));
             
-            C2=Tvap(p,n-1)/(mclad*CpZirc(Tclad(p,n-1))*R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mflux,Peval,ric,roc,Lbund));
+            C2(p,n)=Tvap(p,n-1)/(mclad*CpZirc(Tclad(p,n-1))*R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund));
             
             % coolant temperature
             
-            B3=Tclad(p,n-1)/(Mcool(mflow,Alphas(p,n-1),div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R2conv(Tclad(p,n-1),Tvap(p,n-1),ric,roc,Afuel,Dh,Mflux,Peval,Lbund));
+            B3(p,n)=Tclad(p,n-1)/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund));
             
-            C3=-1/(Mcool(mflow,Alphas(p,n-1),div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000)*(inv(R2conv(Tclad(p,n-1),Tvap(p,n-1),ric,roc,Afuel,Dh,Mflux,Peval,Lbund)))+(inv(R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval)));
+            C3(p,n)=-((1/R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund))+(1/R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval)))/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
             
-            D3=TPT(p,n-1)/(Mcool(mflow,Alphas(p,n-1),div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval));
+            D3(p,n)=TPT(p,n-1)/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval));
             
-            F3=(hin(p,n-1)-hout(p,n-1))/(Mcool(mflow,Alphas(p,n-1),div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
+            F3(p,n)=(hinvap(p,n-1)-houtvap(p,n-1))*Mfluxvap(p,n-1)*Aflow*Alphas(p,n-1)/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
             
+                
+                
             % pressure tube temperature
             
-            B4=Tclad(p,n-1)/(mPT*CpZirc(TPT(p,n-1))*R2rad(Tclad(p,n-1),TPT(p,n-1),ric,roc,Arad,Aipt,Lbund));
+            B4(p,n)=Tclad(p,n-1)/(mPT*CpZirc(TPT(p,n-1))*R2rad(Tclad(p,n-1),TPT(p,n-1),ric,roc,Arad,Aipt,Lbund));
             
-            C4=Tvap(p,n-1)/(mPT*CpZirc(TPT(p,n-1))*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval));
+            C4(p,n)=Tvap(p,n-1)/(mPT*CpZirc(TPT(p,n-1))*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval));
             
-            D4=-1/(mPT*CpZirc(TPT(p,n-1)))*(inv(R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mflux,Peval))+inv(R2rad(Tclad(p,n-1),TPT(p,n-1),ric,roc,Arad,Aipt,Lbund))+inv(R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund)));
+            D4(p,n)=-1/(mPT*CpZirc(TPT(p,n-1)))*(inv(R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval))+inv(R2rad(Tclad(p,n-1),TPT(p,n-1),ric,roc,Arad,Aipt,Lbund))+inv(R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund)));
             
-            E4=TCT(p,n-1)/(mPT*CpZirc(TPT(p,n-1))*R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund));
+            E4(p,n)=TCT(p,n-1)/(mPT*CpZirc(TPT(p,n-1))*R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund));
             
             %calandria tube temperature
             
-            D5=TPT(p,n-1)/(mCT*CpZirc(TCT(p,n-1))*R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund));
+            D5(p,n)=TPT(p,n-1)/(mCT*CpZirc(TCT(p,n-1))*R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund));
             
-            E5=-1/(mCT*CpZirc(TCT(p,n-1)))*(inv(R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund))+inv(R5(TCT(p,n-1),Tmod,rict,roct,Aopt,hmod,Lbund)));
+            E5(p,n)=-1/(mCT*CpZirc(TCT(p,n-1)))*(inv(R4(TPT(p,n-1),TCT(p,n-1),ript,ropt,rict,roct,Lbund))+inv(R5(TCT(p,n-1),rict,roct,hmod,Lbund)));
             
-            F5=Tmod/(mCT*CpZirc(TCT(p,n-1))*R5(TCT(p,n-1),Tmod,rict,roct,Aopt,hmod,Lbund));
+            F5(p,n)=Tmod/(mCT*CpZirc(TCT(p,n-1))*R5(TCT(p,n-1),rict,roct,hmod,Lbund));
             
             %% Temperature calculation
             
-            Tfuel(1,n)=(Tfuel(1,n-1)*exp(A1(1,n)*div))+((1-exp(A1(1,n)*div))*((B1(1,n)+F1(1,n))/-A1(1,n)));
+            Tfuel(p,n)=(Tfuel(p,n-1)*exp(A1(p,n)*div))+((1-exp(A1(p,n)*div))*((B1(p,n)+F1(p,n))/-A1(p,n)));
     
-            Tclad(1,n)=(Tclad(1,n-1)*exp(B2(1,n)*div))+((1-exp(B2(1,n)*div))*((A2(1,n)+C2(1,n)+D2(1,n))/-B2(1,n)));
+            Tclad(p,n)=(Tclad(p,n-1)*exp(B2(p,n)*div))+((1-exp(B2(p,n)*div))*((A2(p,n)+C2(p,n)+D2(p,n))/-B2(p,n)));
     
-            Tvap(1,n)=(Tvap(1,n-1)*exp(C3(1,n)*div))+((1-exp(C3(1,n)*div))*((B3(1,n)+D3(1,n)+F3(1,n))/-C3(1,n)));
+            Tvap(p,n)=(Tvap(p,n-1)*exp(C3(p,n)*div))+((1-exp(C3(p,n)*div))*((B3(p,n)+D3(p,n)+F3(p,n))/-C3(p,n)));
     
-            TPT(1,n)=(TPT(1,n-1)*exp(D4(1,n)*div))+((1-exp(D4(1,n)*div))*((B4(1,n)+C4(1,n)+E4(1,n))/-D4(1,n)));
+            TPT(p,n)=(TPT(p,n-1)*exp(D4(p,n)*div))+((1-exp(D4(p,n)*div))*((B4(p,n)+C4(p,n)+E4(p,n))/-D4(p,n)));
     
-            TCT(1,n)=(TCT(1,n-1)*exp(E5(1,n)*div))+((1-exp(E5(1,n)*div))*((D5(1,n)+F5(1,n))/-E5(1,n)));
+            TCT(p,n)=(TCT(p,n-1)*exp(E5(p,n)*div))+((1-exp(E5(p,n)*div))*((D5(p,n)+F5(p,n))/-E5(p,n)));
             
+%             if Tvap(p,n)<=XSteam('Tsat_p',Peval) && Alphas(p,n-1)~=0
+%                 
+%                 Tvap(p,n)=XSteam('Tsat_p',Peval)+0.1;
+%             end
+                
             %% Main property calculations
-                        
-            hout(p,n)=XSteam('h_pT',Peval,Tvap(p,n))*1000;
             
-            Alphas(p,n)=Bundpower(1,p)/((hout(p,n)*Mflux*Aflow)+Bundpower(1,p));
+            C=(XSteam('hL_p',Peval)*1000)-(Bundpower(1,p)/mflow);
+            
+            Alphas(p,n)=(hin(p,n)-C)/((XSteam('h_pT',Peval,Tvap(p,n))*1000)-C);
+            
+            if Tvap(p,n)==XSteam('Tsat_p',Peval)
+                Alphas(p,n)=(hin(p,n)-C)/((XSteam('h_pT',Peval,Tvap(p,n)+0.1)*1000)-C);
+            end
+            
+            houtvap(p,n)=XSteam('h_pT',Peval,Tvap(p,n))*1000;
+            
+            hout(p,n)=hin(p,n)+((1-Alphas(p,n))*Bundpower(1,p)/mflow);
+            
+            if p==1
+                Mfluxvap(p,n)=(1-Alphas(p,n))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,n)*Aflow);
+            else
+                Mfluxvap(p,n)=(1-Alphas(p,n))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,n)*Aflow)+Mfluxvap(p-1,n);
+            end
+            
+            
+            
+            
+            
         end
     end
 end
