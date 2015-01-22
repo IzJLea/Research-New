@@ -123,9 +123,9 @@ mfuel=Lbund*pi()/4*dfuel^2*rhoUO2(Tref); %kg mass of fuel within one fuel elemen
 %% Time determination 
 % This section sets the length of the simulation and time divisions an
 
-Time=10000;  %seconds total run time
+Time=1000;  %seconds total run time
 
-div=10; %s time step length
+div=0.1; %s time step length
 
 ind=Time/div; % index to determine time step number
 
@@ -288,7 +288,7 @@ hin(1,1:ind)=XSteam('h_pT',Peval,Tenter)*1000;
 hout(1,1)=hin(1,1)+(Bundpower(1,1)/mflow);
 
 if hout(1,1)>=XSteam('hL_p',Peval)*1000
-    Alphas(1,1)=(Bundpower(1,1)+(alpha*Mflux*Aflow*hin(1,1))-(Mflux*Aflow*XSteam('hL_p',Peval)*1000))/((Mflux*Aflow*XSteam('hV_p',Peval)*1000)-(Mflux*Aflow*XSteam('hL_p',Peval)*1000)+Bundpower(1,1));
+    
     
     hout(1,1)=hin(1,1)+(Bundpower(1,1)*Alphas(1,1)/mflow);
     
@@ -386,13 +386,13 @@ for n=2:ind
             
             % coolant temperature
             
-            B3(p,n)=Tclad(p,n-1)/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund));
+            B3(p,n)=Tclad(p,n-1)/(Mcool(Tvap(p,n-1),Peval,Aflow,Alphas(p,n-1),Lbund)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R2conv(Tclad(p,n-1),Tvap(p,n-1),ric,roc,Afuel,Dh,Mfluxvap(p,n-1),Peval,Lbund));
             
-            C3(p,n)=-((1/R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund))+(1/R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval)))/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
+            C3(p,n)=-((1/R2(Tclad(p,n-1),Tvap(p,n-1),TPT(p,n-1),Afuel,Arad,Aipt,Dh,Mfluxvap(p,n-1),Peval,ric,roc,Lbund))+(1/R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval)))/(Mcool(Tvap(p,n-1),Peval,Aflow,Alphas(p,n-1),Lbund)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
             
-            D3(p,n)=TPT(p,n-1)/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval));
+            D3(p,n)=TPT(p,n-1)/(Mcool(Tvap(p,n-1),Peval,Aflow,Alphas(p,n-1),Lbund)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000*R3(Tvap(p,n-1),TPT(p,n-1),Aipt,Dh,ript,ropt,Lbund,Mfluxvap(p,n-1),Peval));
             
-            F3(p,n)=(hinvap(p,n-1)-houtvap(p,n-1))*Mfluxvap(p,n-1)*Aflow*Alphas(p,n-1)/(Mcool(Mfluxvap(p,n-1),Alphas(p,n-1),Aflow,div)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
+            F3(p,n)=(hinvap(p,n-1)-houtvap(p,n-1))*Mfluxvap(p,n-1)*Aflow*Alphas(p,n-1)/(Mcool(Tvap(p,n-1),Peval,Aflow,Alphas(p,n-1),Lbund)*XSteam('Cp_pT',Peval,Tvap(p,n-1))*1000);
             
                 
                 
@@ -426,35 +426,31 @@ for n=2:ind
     
             TCT(p,n)=(TCT(p,n-1)*exp(E5(p,n)*div))+((1-exp(E5(p,n)*div))*((D5(p,n)+F5(p,n))/-E5(p,n)));
             
-%             if Tvap(p,n)<=XSteam('Tsat_p',Peval) && Alphas(p,n-1)~=0
-%                 
-%                 Tvap(p,n)=XSteam('Tsat_p',Peval)+0.1;
-%             end
+            if Tvap(p,n)<=XSteam('Tsat_p',Peval) && Alphas(p,n-1)~=0
+                
+                Tvap(p,n)=XSteam('Tsat_p',Peval)+0.1;
+            end
                 
             %% Main property calculations
             
             C=(XSteam('hL_p',Peval)*1000)-(Bundpower(1,p)/mflow);
             
-            Alphas(p,n)=(hin(p,n)-C)/((XSteam('h_pT',Peval,Tvap(p,n))*1000)-C);
+            Alphas(p,n)=(hin(p,n-1)-C)/((XSteam('h_pT',Peval,Tvap(p,n-1))*1000)-C);
             
-            if Tvap(p,n)==XSteam('Tsat_p',Peval)
-                Alphas(p,n)=(hin(p,n)-C)/((XSteam('h_pT',Peval,Tvap(p,n)+0.1)*1000)-C);
+            if Tvap(p,n-1)==XSteam('Tsat_p',Peval)
+                Alphas(p,n)=(hin(p,n-1)-C)/((XSteam('h_pT',Peval,Tvap(p,n-1)+0.1)*1000)-C);
             end
-            
-            houtvap(p,n)=XSteam('h_pT',Peval,Tvap(p,n))*1000;
-            
-            hout(p,n)=hin(p,n)+((1-Alphas(p,n))*Bundpower(1,p)/mflow);
             
             if p==1
-                Mfluxvap(p,n)=(1-Alphas(p,n))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,n)*Aflow);
+                Mfluxvap(p,n)=(1-Alphas(p,n-1))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,n-1)*Aflow);
             else
-                Mfluxvap(p,n)=(1-Alphas(p,n))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,n)*Aflow)+Mfluxvap(p-1,n);
+                Mfluxvap(p,n)=(1-Alphas(p,n-1))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,n-1)*Aflow)+Mfluxvap(p-1,n-1);
             end
+                        
+            houtvap(p,n)=XSteam('h_pT',Peval,Tvap(p,n-1))*1000;
             
-            
-            
-            
-            
+            hout(p,n)=hin(p,n)+((1-Alphas(p,n-1))*Bundpower(1,p)/(Mfluxvap(p,n-1)*Aflow*Alphas(p,n-1)));
+                        
         end
     end
 end

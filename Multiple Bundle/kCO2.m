@@ -258,5 +258,5 @@ function k=kCO2(Temp)
 1190.0
 1200.0];
     
-    k=interp1(kCO2Temp,kCO2,Temp)*1000;
+    k=interp1(kCO2Temp,kCO2,Temp)/1000;
 end
