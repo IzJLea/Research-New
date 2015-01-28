@@ -2,7 +2,6 @@ function power=cosPower(Sections,Power)
 
 div=pi()/Sections;
 
-count=1;
 
 cosPo=zeros(1,Sections);
 H=Power/2;

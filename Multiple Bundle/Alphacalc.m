@@ -1,17 +1,17 @@
-function res=Alphacalc(Peval,Tvap,Qbundle,hin,Mfluxvapin,Mflux)
+function res=Alphacalc(power,Aflow,Peval,Mflux,gammain,alphain,hvapin,hvap)
 
-if Tvap<=XSteam('Tsat_p',Peval)+0.1
-    Tvap=Tvap+0.1;
-end
+syms x y
+A=(2*x*y)-x-y;
 
-A=Mfluxvapin+(1-alpha)*Qbundle/(alpha*Aflow*(XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000)-Mfluxvap;
+B=(gammain*alphain*Mflux*Aflow*hvapin)-(y*x*Mflux*Aflow*hvap)+((1-x)*power/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*XSteam('hV_p',Peval));
 
-B=(hout-hin)*Mflux*Aflow-(1-alpha)*Qbundle;
+funct=[A;B];
 
-C=(XSteam('h_pT',Peval,Tvap)*alpha+(1-alpha)*XSteam('hL_p',Peval))*1000-hout;
-
+res=solve(funct,0.5,0.5);
 
 
-res=solve(A,B,C,alpha,hout,Mfluxvap);
+
+
+
 
 

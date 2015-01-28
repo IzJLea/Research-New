@@ -9,7 +9,7 @@ H=0; %m height difference from inlet/outlet headers
 
 hmod=1000; %W/m^2.K heat transfer coefficient 
 
-Tenter=200; %C Entering coolant temperature
+Tenter=300; %C Entering coolant temperature
 
 PSH=210; %kPa supply header pressure
 
@@ -156,11 +156,9 @@ hin=zeros(bunds,ind);
 
 hout=zeros(bunds,ind);% channel exit enthalpy
 
-houtvap=zeros(bunds,ind);
+hvap=zeros(bunds,ind);
 
-hinvap=zeros(bunds,ind);
-
-Mfluxvap=zeros(bunds,ind);
+gamma=zeros(bunds,ind);
 
 %Calculation Constants
 
@@ -289,43 +287,41 @@ hout(1,1)=hin(1,1)+(Bundpower(1,1)/mflow);
 
 if hout(1,1)>=XSteam('hL_p',Peval)*1000
     
+    Alphasres=Alphacalc(Bundpower(1,1),Aflow,Peval,Mflux,0);
     
-    hout(1,1)=hin(1,1)+(Bundpower(1,1)*Alphas(1,1)/mflow);
+    Alphas(1,1)=Alphasres(1,1);
     
-    Mfluxvap(1,1)=(1-Alphas(1,1))*Bundpower(1,1)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(1,1)*Aflow);
+    gamma(1,1)=Alphasres(1,2);
     
-    houtvap(1,1)=XSteam('hV_p',Peval)*1000;
-    
-    if Alphas(1,1)~=0
-        
-        hinvap(1,1)=XSteam('hV_p',Peval)*1000;
-    end
-    
+    hout(1,1)=((Alphas(1,1)*gamma(1,1)*XSteam('hV_p',Peval))+((1-Alphas(1,1))*(1-gamma(1,1))*XSteam('hV_p',Peval)))*1000;
 end
 
 for p=2:bunds
     
     hin(p,1)=hout(p-1,1);
     
-    hinvap(p,1)=houtvap(p-1,1);
+   
     
-    hout(p,1)=hin(p,1)+(Bundpower(1,p)/mflow);
+    hout(p,1)=hin(p,1)+Bundpower(1,p)/mflow;
     
-    if hout(p,1)>=XSteam('hL_p',Peval)*1000
-        
-        Alphas(p,1)=((Bundpower(1,p)/mflow)+hin(p,1)-(1000*XSteam('hL_p',Peval)))/((1000*(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)))+(Bundpower(1,p)/mflow));
+    if hout(p,1)>=XSteam('hL_p',Peval)*1000 || Alphas(p-1,1)>0 
     
-        hout(p,1)=1000*((Alphas(p,1)*XSteam('hV_p',Peval))+((1-Alphas(p,1))*XSteam('hL_p',Peval)));
+        hvap(p,1)=XSteam('hV_p',Peval)*1000;
         
-        houtvap(p,1)=XSteam('hV_p',Peval)*1000;
+        Alphacalc=Alphacalc(Bundpower(1,p),Aflow,Peval,Mflux,gamma(p-1,1),Alphas(p-1,1),hvap(p-1,1),hvap(p,1));
         
-        if Alphas(p,1)~=0
+        RESalpha=double(Alphacalc.x);
         
-            hinvap(p,1)=XSteam('hV_p',Peval)*1000;
-        end
+        RESgamma=double(Alphacalc.y);
         
-        Mfluxvap(p,1)=(1-Alphas(p,1))*Bundpower(1,p)/((XSteam('hV_p',Peval)-XSteam('hL_p',Peval))*1000*Alphas(p,1)*Aflow)+Mfluxvap(p-1,1);
+        Alphas(p,1)=RESalpha(RESalpha>0 & RESalpha<1);
+        
+        gamma(p,1)=RESalpha(RESgamma>0);
+        
+        hout(p,1)=hvap(p,1)*gamma(p,1)*Alphas(p,1)+(XSteam('hL_p',Peval)*1000*(1-gamma(p,1))*(1-Alphas(p,1)));
     end
+        
+    
 end
         
         
