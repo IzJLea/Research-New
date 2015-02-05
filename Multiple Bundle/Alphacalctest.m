@@ -39,20 +39,22 @@ for p=2:2:2*eqs
     
     if p==2
         
-        Functions(p-1,1)=1-(X(p/2,1)*Y(p/2,1))-((1-X(p/2,1))*(1-Y(p/2,1)));
+       
         
-        Functions(p,1)=((1-X(p/2,1))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)))-(Mflow*Aflow*X(p/2,1)*Y(p/2,1));
+        Functions(p-1,1)=1-((eval('x.' num2str(p/2)))*(eval('y.'num2str(p/2))))-((1-eval('x.'num2str(p/2)))*(1-eval('y.'num2str(p/2)));
+        
+        Functions(p,1)=((1-eval('x.'num2str(p/2)))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)))-(Mflow*Aflow*eval('x.'num2str(p/2))*eval('y.'num2str(p/2));
     elseif p==(2*eqs)
         
-        Functions(p-1,1)=(X(p/2-1,1)*Y(p/2-1,1))+((1-X(p/2-1,1))*(1-Y(p/2-1,1)))-X(p/2,1);
+        Functions(p-1,1)=(eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))+((1-eval('x.'num2str(p/2-1)))*(1-eval('y.'num2str(p/2-1))))-eval('x.'num2str(p/2));
         
-        Functions(p,1)=Mflow*Aflow*((X(p/2-1,1)*Y(p/2-1,1))-X(p/2,1))+((1-X(p/2,1))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
+        Functions(p,1)=Mflow*Aflow*((eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))-eval('x.'num2str(p/2)))+((1-eval('x.'num2str(p/2)))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
         
     else
         
-        Functions(p-1,1)=(X(p/2-1,1)*Y(p/2-1,1))+((1-X(p/2-1,1))*(1-Y(p/2-1,1)))-X(p/2,1)-(X(p/2,1)*Y(p/2,1))-((1-X(p/2,1))*(1-Y(p/2,1)));
+        Functions(p-1,1)=(eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))+((1-eval('x.'num2str(p/2-1)))*(1-eval('y.'num2str(p/2-1))))-eval('x.'num2str(p/2))-(eval('x.'num2str(p/2))*eval('y.'num2str(p/2))-((1-eval('x.'num2str(p/2)))*(1-eval('y.'num2str(p/2)));
         
-        Functions(p,1)=Mflow*Aflow*((X(p/2-1,1)*Y(p/2-1,1))-(X(p/2,1)*Y(p/2,1)))+((1-X(p/2,1))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
+        Functions(p,1)=Mflow*Aflow*((eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))-(eval('x.'num2str(p/2))*eval('y.'num2str(p/2)))+((1-eval('x.'num2str(p/2)))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
     end
 end
 
