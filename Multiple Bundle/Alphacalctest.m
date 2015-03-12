@@ -6,58 +6,90 @@ Tenter=300;
 
 bunds=12;
 
-Mflux=140.994;
+Mflux=27.7839;
 
 Aflow=0.0035;
 
-Power=cosPower(bunds,channelpower*1000);
+mflow=Mflux*Aflow;
+
+alpha=0.11546;
+
+alphaguess=0;
+
+Lchannel=6; %meters
+
+DPT=0.10338;
+
+Wchar=Aflow/DPT;
+
+vmax=mflow/XSteam('rhoL_p',Peval)/Aflow;
+
+Power=linPower(bunds,channelpower*1000);
 
 hin=XSteam('h_pT',Peval,Tenter);
 
 hevap=XSteam('hL_p',Peval);
 
-for m=1:bunds
-    hout=hin+Power(1,m)/(Mflux*Aflow);
+%% calculation of saturation length
+
+qlin=channelpower*1000/Lchannel;
+
+Lsat=mflow*(hevap-hin)/qlin;
     
-        if hout>=hevap
-            
-            break
-        else
-            hin=hout;
-        end
+Leval=zeros(1,bunds);
+
+count=zeros(1,bunds);
+
+H=zeros(1,bunds);
+
+B=zeros(1,bunds);
+
+alphas=zeros(1,bunds);
+
+Leval(1,1)=0.5;
+
+for j=2:bunds
+    
+    
+    Leval(1,j)=Leval(1,j-1)+0.5;
+    
 end
 
-eqs=bunds-(m-1);
+Ho=((2*DPT*Lchannel*(1-alpha))-(DPT*(Lsat+Lchannel)))/(Lchannel-Lsat);
 
-Functions=zeros(2*eqs,1);
-
-X=sym('x',[eqs,1]);
-
-Y=sym('y',[eqs,1]);
-
-for p=2:2:2*eqs
+for k=1:bunds
     
-    if p==2
+    if Leval(1,k)>Lsat;
         
-       
+        alphas(1,k)=alphaguess;
         
-        Functions(p-1,1)=1-((eval('x.' num2str(p/2)))*(eval('y.'num2str(p/2))))-((1-eval('x.'num2str(p/2)))*(1-eval('y.'num2str(p/2)));
-        
-        Functions(p,1)=((1-eval('x.'num2str(p/2)))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)))-(Mflow*Aflow*eval('x.'num2str(p/2))*eval('y.'num2str(p/2));
-    elseif p==(2*eqs)
-        
-        Functions(p-1,1)=(eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))+((1-eval('x.'num2str(p/2-1)))*(1-eval('y.'num2str(p/2-1))))-eval('x.'num2str(p/2));
-        
-        Functions(p,1)=Mflow*Aflow*((eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))-eval('x.'num2str(p/2)))+((1-eval('x.'num2str(p/2)))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
-        
-    else
-        
-        Functions(p-1,1)=(eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))+((1-eval('x.'num2str(p/2-1)))*(1-eval('y.'num2str(p/2-1))))-eval('x.'num2str(p/2))-(eval('x.'num2str(p/2))*eval('y.'num2str(p/2))-((1-eval('x.'num2str(p/2)))*(1-eval('y.'num2str(p/2)));
-        
-        Functions(p,1)=Mflow*Aflow*((eval('x.'num2str(p/2-1))*eval('y.'num2str(p/2-1)))-(eval('x.'num2str(p/2))*eval('y.'num2str(p/2)))+((1-eval('x.'num2str(p/2)))*Power(1,p/2+(m-1))/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval)));
+        err=1;
+        for l=1:5000
+           
+            
+            B(1,k)=qlin*alpha/DPT/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval))/Wchar/vmax/XSteam('rhoL_p',Peval)/(alpha-alphas(1,k));
+            
+            H(1,k)=(Leval(1,k)*exp(-B(1,k)*Leval(1,k)))-(Lsat*exp(-B(1,k)*Lsat))+Ho;
+            
+            alphanew=(1-((((-Leval(1,k)/B(1,k))+(1/B(1,k)^2))*exp(-B(1,k)*Leval(1,k)))-(((-Lsat/B(1,k))+(1/B(1,k)^2))*exp(-B(1,k)*Lsat))-(Lsat*exp(-B(1,k)*Lsat)*(Leval(1,k)-Lsat))+(Ho*(Leval(1,k)-Lsat))))/DPT/Leval(1,k);
+            
+            error=alphanew-alphas(1,k);
+            
+            err=abs(error);
+            
+            alphas(1,k)=alphas(1,k)+(0.000001*error);
+            
+            if err<0.000001
+                
+                break
+            end
+            
+            if isnan(alphas(1,k))
+                break
+            end
+            count(1,k)=count(1,k)+1;
+        end
     end
 end
 
-
-
-%Solution=solve(Functions,X,Y);
+    

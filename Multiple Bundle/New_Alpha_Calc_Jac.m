@@ -64,16 +64,16 @@ F20=@(x,y) x(9)*y(9)*mflow-x(10)*y(10)*mflow+(1-x(10))*mmax(1,Boil+9);
 %Derivatives for Jacobian
 
 dF1dx1=@(y) -2*y(1)+1;
-
+ 
 dF1dy1=@(x) -2*x(1)+1;
 
 dF2dx1=@(y) -y(1)*mflow-mmax(1,Boil);
 
 dF2dy1=@(x) -x(1)*mflow;
 
-dF3dx1=@(y) 2*y(1)-1;
+dF3dx1=@(y) 0;
 
-dF3dy1=@(x) 2*x(1)-1;
+dF3dy1=@(x) 0;
 
 dF3dx2=@(y) -2*y(2)+1;
 
@@ -87,9 +87,9 @@ dF4dx2=@(y) -y(2)*mflow-mmax(1,Boil+1);
 
 dF4dy2=@(x) -x(2)*mflow;
 
-dF5dx2=@(y) 2*y(2)-1;
+dF5dx2=@(y) 0;
 
-dF5dy2=@(x) 2*x(2)-1;
+dF5dy2=@(x) 0;
 
 dF5dx3=@(y) -2*y(3)+1;
 
@@ -103,9 +103,9 @@ dF6dx3=@(y) -y(3)*mflow-mmax(1,Boil+2);
 
 dF6dy3=@(x) -x(3)*mflow;
 
-dF7dx3=@(y) 2*y(3)-1;
+dF7dx3=@(y) 0;
 
-dF7dy3=@(x) 2*x(3)-1;
+dF7dy3=@(x) 0;
 
 dF7dx4=@(y) -2*y(4)+1;
 
@@ -119,9 +119,9 @@ dF8dx4=@(y) -y(4)*mflow-mmax(1,Boil+3);
 
 dF8dy4=@(x) -x(4)*mflow;
 
-dF9dx4=@(y) 2*y(4)-1;
+dF9dx4=@(y) 0;
 
-dF9dy4=@(x) 2*x(4)-1;
+dF9dy4=@(x) 0;
 
 dF9dx5=@(y) -2*y(5)+1;
 
@@ -135,9 +135,9 @@ dF10dx5=@(y) -y(5)*mflow-mmax(1,Boil+4);
 
 dF10dy5=@(x) -x(5)*mflow;
 
-dF11dx5=@(y) 2*y(5)-1;
+dF11dx5=@(y) 0;
 
-dF11dy5=@(x) 2*x(5)-1;
+dF11dy5=@(x) 0;
 
 dF11dx6=@(y) -2*y(6)+1;
 
@@ -151,9 +151,9 @@ dF12dx6=@(y) -y(6)*mflow-mmax(1,Boil+5);
 
 dF12dy6=@(x) -x(6)*mflow;
 
-dF13dx6=@(y) 2*y(6)-1;
+dF13dx6=@(y) 0;
 
-dF13dy6=@(x) 2*x(6)-1;
+dF13dy6=@(x) 0;
 
 dF13dx7=@(y) -2*y(7)+1;
 
@@ -167,9 +167,9 @@ dF14dx7=@(y) -y(7)*mflow-mmax(1,Boil+6);
 
 dF14dy7=@(x) -x(7)*mflow;
 
-dF15dx7=@(y) 2*y(7)-1;
+dF15dx7=@(y) 0;
 
-dF15dy7=@(x) 2*x(7)-1;
+dF15dy7=@(x) 0;
 
 dF15dx8=@(y) -2*y(8)+1;
 
@@ -183,9 +183,9 @@ dF16dx8=@(y) -y(8)*mflow-mmax(1,Boil+7);
 
 dF16dy8=@(x) -x(8)*mflow;
 
-dF17dx8=@(y) 2*y(8)-1;
+dF17dx8=@(y) 0;
 
-dF17dy8=@(x) 2*x(8)-1;
+dF17dy8=@(x) 0;
 
 dF17dx9=@(y) -2*y(9)+1;
 
@@ -199,13 +199,9 @@ dF18dx9=@(y) -y(9)*mflow-mmax(1,Boil+8);
 
 dF18dy9=@(x) -x(9)*mflow;
 
-dF19dx9=@(y) 2*y(9)-1;
+dF19dx10=@(y) -y(10);
 
-dF19dy9=@(x) 2*x(9)-1;
-
-dF19dx10=@(y) -2*y(10)+1;
-
-dF19dy10=@(x) -2*x(10)+1;
+dF19dy10=@(x) -x(10);
 
 dF20dx9=@(y) y(9)*mflow;
 
@@ -218,11 +214,14 @@ dF20dy10=@(x) -x(10)*mflow;
 %%
 %Solving system
 
-x=ones(12-Boil+1,1)*0.5;
+x=ones(12-Boil+1,1)*0.1;
 
-y=ones(12-Boil+1,1)*0.5;
+y=ones(12-Boil+1,1)*0.9;
 
-for iter=1:1000000
+Iterations=200000000;
+
+for iter=1:Iterations
+   
     
     Jac=zeros(Functions,Functions);
     
@@ -368,10 +367,6 @@ for iter=1:1000000
         
     Jac(18,18)=dF18dy9(y);
     
-    Jac(19,17)=dF19dx9(y);
-    
-    Jac(19,18)=dF19dy9(x);
-    
     Jac(19,19)=dF19dx10(y);
     
     Jac(19,20)=dF19dy10(x);
@@ -426,7 +421,7 @@ for iter=1:1000000
     
     Deltas=-F\Jac;
     
-    for sep=1:Functions
+    for sep=1:2*Functions
         
         if mod(sep,2)
             
@@ -451,15 +446,25 @@ for iter=1:1000000
     
     y=ynew;
     
-    if errx<0.0001 
-        if erry<0.0001
+    maxerrx=abs(max(errx));
+    
+    maxerry=abs(max(erry));
+    
+    if maxerrx<0.0001 
+        if maxerry<0.0001
             display('Converged!');
-                      
+                 
+            send_mail_message('izaak.lea','CONVERGED!','CONVERGED','R1.m') 
+            
             break
         end
     end
+    
+    display('Count:', num2str(iter));
+   
+    
 end
 
 
-    
-    
+send_mail_message('izaak.lea','NOT CONVERGED!','NOT CONVERGED','R1.m')     
+     

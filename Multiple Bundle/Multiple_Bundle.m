@@ -11,9 +11,9 @@ hmod=1000; %W/m^2.K heat transfer coefficient
 
 Tenter=300; %C Entering coolant temperature
 
-PSH=210; %kPa supply header pressure
+PSH=100; %kPa supply header pressure
 
-PVH=190; %kPa vent header pressure
+PVH=80; %kPa vent header pressure
 
 Tmod=60; %C Moderator temperature
 
@@ -276,226 +276,282 @@ for m=1:bunds
     TCT(m,1)=(Qloss(Tvap(m,1),Tvap(m,1),Tmod,Tmod,ript,ropt,rict,roct,hmod,Dh,Lbund,Mflux,Peval)*R5(Tmod,rict,roct,hmod,Lbund))+Tmod;       
 end
 
-%% initial alpha values. Liquid inventory/enthalpy is main variable
+%% Initial vapor fractions
 
-hin(1,1:ind)=XSteam('h_pT',Peval,Tenter)*1000;
+
+hin(1,1)=XSteam('h_pT',Peval,Tenter)*1000;
 
 hout(1,1)=hin(1,1)+(Bundpower(1,1)/mflow);
 
-if hout(1,1)>=XSteam('hL_p',Peval)*1000
+if hout(1,1)>XSteam('hL_p',Peval)*1000
     
-    mmax=Bundpower(1,p);
-    
-    F1= @(x,y) 2*x*y-x-y;
-    F2= @(x,y) (1-x)*mmax-x*y*mflow;
-    F1x= @(y) 2*y-1;
-    F1y= @(x) 2*x-1;
-    F2x= @(y) -mmax-y*mflow;
-    F2y= @(x) -x*mflow;
-    
-    
-    
-    
-    
-    
-    guess=[0.5;0.5];
-    
-    while Errx<0.0001 && Erry<0.0001
-        
-        diff=det(Jac)./-F;
-        
-        dx=diff(1);
-        
-        dy=diff(2);
-        
-        xnew=guess(1,1)+dx;
-        
-        ynew=guess(2,1)+dy;
-        
-        Errx=abs((xnew-guess(1,1))/guess(1,1));
-        
-        Erry=abs((ynew-guess(2,1))/guess(2,1));
-        
-        guess=[xnew;ynew];
-    end
-        
-        
-    
+    boil=1;
 end
 
-for p=2:bunds
+for count1=2:bunds
     
-    hin(p,1)=hout(p-1,1);
+    hin(count1,1)=hout(count1-1,1);
     
-   
+    hout(count1,1)=hin(count1,1)+(Bundpower(1,count1)/mflow);
     
-    hout(p,1)=hin(p,1)+Bundpower(1,p)/mflow;
-    
-    if hout(p,1)>=XSteam('hL_p',Peval)*1000 
-    
-        if Alphas(1,p-1)==0
-            
-            Errx=1;
-            Erry=1;
-            
-            mmax=Bundpower(1,p)/((XSteam('hV_p',Peval)*1000)-hin(p,1));
-    
-            F1= @(x,y) 2*x*y-x-y;
-            F2= @(x,y) (1-x)*mmax-x*y*mflow;
-            F1x= @(y) 2*y-1;
-            F1y= @(x) 2*x-1;
-            F2x= @(y) -mmax-y*mflow;
-            F2y= @(x) -x*mflow;
-    
-               
-            xi=0.5;
-            
-            yi=0.5;
-            
-            
-    
-            while Errx>0.0001 && Erry>0.0001
-                
-                Jacob=[F1x(yi) F1y(xi); F2x(yi) F2y(xi)];
-                
-                F=[F1(xi,yi);F2(xi,yi)];
-                
-                Deltas=-F\Jacob;
-                
-                xinew=xi+Deltas(1,1);
-                
-                yinew=yi+Deltas(1,2);
-                
-                Errx=abs((xinew-xi)/xi);
-                
-                Erry=abs((yinew-yi)/yi);
-                
-                xi=xinew;
-                
-                yi=yinew;
-                
-                
-            end
-            clear Errx Erry
-            
-            Alphas(1,p)=xi;
-            
-            gamma(1,p)=yi;
-        end
-
-        if Alphas(1,p-1)~=0 
-            Errx=1;
-            Erry=1;
-            mmax=Bundpower(1,p)/1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
-            
-            vin=Alphas(1,p-1)*gamma(1,p-1)*mflow;
-    
-            F1= @(x,y) 2*x*y-x-y;
-            F2= @(x,y) vin+(1-x)*mmax-x*y*mflow;
-            F1x= @(y) 2*y-1;
-            F1y= @(x) 2*x-1;
-            F2x= @(y) -mmax-y*mflow;
-            F2y= @(x) -x*mflow;
-    
-                
-    
-            xi=Alphas(1,p-1);
-            
-            yi=gamma(1,p-1);
-            
-            
-    
-            while Errx>0.0001 && Erry>0.0001
-                
-                Jacob=[F1x(yi) F1y(xi); F2x(yi) F2y(xi)];
-                
-                F=[F1(xi,yi);F2(xi,yi)];
-                
-                Deltas=-F\Jacob;
-                
-                xinew=xi+Deltas(1,1);
-                
-                yinew=yi+Deltas(1,2);
-                
-                Errx=abs((xinew-xi)/xi);
-                
-                Erry=abs((yinew-yi)/yi);
-                
-                xi=xinew;
-                
-                yi=yinew;
-                
-                
-            end
-            
-            clear Errx Erry
-            Alphas(1,p)=xi;
-            
-            gamma(1,p)=yi;
-        end
+    if hout(count1,1)>XSteam('hL_p',Peval)*1000
         
-        if p==bunds;
-            
-            Errx=1;
-            Erry=1;
-            
-            mmax=Bundpower(1,p)/1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
-            
-            vin=Alphas(1,p-1)*gamma(1,p-1)*mflow;
-    
-            F1= @(x,y) 1-x*y;
-            F2= @(x,y) vin+(1-x)*mmax-x*y*mflow;
-            F1x= @(y) -y;
-            F1y= @(x) -x;
-            F2x= @(y) -mmax-y*mflow;
-            F2y= @(x) -x*mflow;
-    
-            
-            
-    
-            xi=Alphas(1,p-1);
-            
-            yi=gamma(1,p-1);
-            
-            
-    
-            while Errx>0.0001 && Erry>0.0001
-                
-                Jacob=[F1x(yi) F1y(xi); F2x(yi) F2y(xi)];
-                
-                F=[F1(xi,yi);F2(xi,yi)];
-                
-                Deltas=-F\Jacob;
-                
-                xinew=xi+Deltas(1,1);
-                
-                yinew=yi+Deltas(1,2);
-                
-                Errx=abs((xinew-xi)/xi);
-                
-                Erry=abs((yinew-yi)/yi);
-                
-                xi=xinew;
-                
-                yi=yinew;
-                
-                
-            end
-            
-            clear Errx Erry
-            
-            Alphas(1,p)=xi;
-            
-            gamma(1,p)=yi;
-            
-        end
-            
+        boil=count1;
+        
+        break
     end
-        
-    
 end
-        
-        
+
+    
+    
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%% initial alpha values. Liquid inventory/enthalpy is main variable
+
+% hin(1,1:ind)=XSteam('h_pT',Peval,Tenter)*1000;
+% 
+% hout(1,1)=hin(1,1)+(Bundpower(1,1)/mflow);
+% 
+% if hout(1,1)>=XSteam('hL_p',Peval)*1000
+%     
+%     mmax=Bundpower(1,p);
+%     
+%     F1= @(x,y) 2*x*y-x-y;
+%     F2= @(x,y) (1-x)*mmax-x*y*mflow;
+%     F1x= @(y) 2*y-1;
+%     F1y= @(x) 2*x-1;
+%     F2x= @(y) -mmax-y*mflow;
+%     F2y= @(x) -x*mflow;
+%     
+%     
+%     
+%     
+%     
+%     
+%     guess=[0.5;0.5];
+%     
+%     while Errx<0.0001 && Erry<0.0001
+%         
+%         diff=det(Jac)./-F;
+%         
+%         dx=diff(1);
+%         
+%         dy=diff(2);
+%         
+%         xnew=guess(1,1)+dx;
+%         
+%         ynew=guess(2,1)+dy;
+%         
+%         Errx=abs((xnew-guess(1,1))/guess(1,1));
+%         
+%         Erry=abs((ynew-guess(2,1))/guess(2,1));
+%         
+%         guess=[xnew;ynew];
+%     end
+%         
+%         
+%     
+% end
+% 
+% for p=2:bunds
+%     
+%     hin(p,1)=hout(p-1,1);
+%     
+%    
+%     
+%     hout(p,1)=hin(p,1)+Bundpower(1,p)/mflow;
+%     
+%     if hout(p,1)>=XSteam('hL_p',Peval)*1000 
+%     
+%         if Alphas(1,p-1)==0
+%             
+%             Errx=1;
+%             Erry=1;
+%             
+%             mmax=Bundpower(1,p)/((XSteam('hV_p',Peval)*1000)-hin(p,1));
+%     
+%             F1= @(x,y) 2*x*y-x-y;
+%             F2= @(x,y) (1-x)*mmax-x*y*mflow;
+%             F1x= @(y) 2*y-1;
+%             F1y= @(x) 2*x-1;
+%             F2x= @(y) -mmax-y*mflow;
+%             F2y= @(x) -x*mflow;
+%     
+%                
+%             xi=0.5;
+%             
+%             yi=0.5;
+%             
+%             
+%     
+%             while Errx>0.0001 && Erry>0.0001
+%                 
+%                 Jacob=[F1x(yi) F1y(xi); F2x(yi) F2y(xi)];
+%                 
+%                 F=[F1(xi,yi);F2(xi,yi)];
+%                 
+%                 Deltas=-F\Jacob;
+%                 
+%                 xinew=xi+Deltas(1,1);
+%                 
+%                 yinew=yi+Deltas(1,2);
+%                 
+%                 Errx=abs((xinew-xi)/xi);
+%                 
+%                 Erry=abs((yinew-yi)/yi);
+%                 
+%                 xi=xinew;
+%                 
+%                 yi=yinew;
+%                 
+%                 
+%             end
+%             clear Errx Erry
+%             
+%             Alphas(1,p)=xi;
+%             
+%             gamma(1,p)=yi;
+%         end
+% 
+%         if Alphas(1,p-1)~=0 
+%             Errx=1;
+%             Erry=1;
+%             mmax=Bundpower(1,p)/1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
+%             
+%             vin=Alphas(1,p-1)*gamma(1,p-1)*mflow;
+%     
+%             F1= @(x,y) 2*x*y-x-y;
+%             F2= @(x,y) vin+(1-x)*mmax-x*y*mflow;
+%             F1x= @(y) 2*y-1;
+%             F1y= @(x) 2*x-1;
+%             F2x= @(y) -mmax-y*mflow;
+%             F2y= @(x) -x*mflow;
+%     
+%                 
+%     
+%             xi=Alphas(1,p-1);
+%             
+%             yi=gamma(1,p-1);
+%             
+%             
+%     
+%             while Errx>0.0001 && Erry>0.0001
+%                 
+%                 Jacob=[F1x(yi) F1y(xi); F2x(yi) F2y(xi)];
+%                 
+%                 F=[F1(xi,yi);F2(xi,yi)];
+%                 
+%                 Deltas=-F\Jacob;
+%                 
+%                 xinew=xi+Deltas(1,1);
+%                 
+%                 yinew=yi+Deltas(1,2);
+%                 
+%                 Errx=abs((xinew-xi)/xi);
+%                 
+%                 Erry=abs((yinew-yi)/yi);
+%                 
+%                 xi=xinew;
+%                 
+%                 yi=yinew;
+%                 
+%                 
+%             end
+%             
+%             clear Errx Erry
+%             Alphas(1,p)=xi;
+%             
+%             gamma(1,p)=yi;
+%         end
+%         
+%         if p==bunds;
+%             
+%             Errx=1;
+%             Erry=1;
+%             
+%             mmax=Bundpower(1,p)/1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
+%             
+%             vin=Alphas(1,p-1)*gamma(1,p-1)*mflow;
+%     
+%             F1= @(x,y) 1-x*y;
+%             F2= @(x,y) vin+(1-x)*mmax-x*y*mflow;
+%             F1x= @(y) -y;
+%             F1y= @(x) -x;
+%             F2x= @(y) -mmax-y*mflow;
+%             F2y= @(x) -x*mflow;
+%     
+%             
+%             
+%     
+%             xi=Alphas(1,p-1);
+%             
+%             yi=gamma(1,p-1);
+%             
+%             
+%     
+%             while Errx>0.0001 && Erry>0.0001
+%                 
+%                 Jacob=[F1x(yi) F1y(xi); F2x(yi) F2y(xi)];
+%                 
+%                 F=[F1(xi,yi);F2(xi,yi)];
+%                 
+%                 Deltas=-F\Jacob;
+%                 
+%                 xinew=xi+Deltas(1,1);
+%                 
+%                 yinew=yi+Deltas(1,2);
+%                 
+%                 Errx=abs((xinew-xi)/xi);
+%                 
+%                 Erry=abs((yinew-yi)/yi);
+%                 
+%                 xi=xinew;
+%                 
+%                 yi=yinew;
+%                 
+%                 
+%             end
+%             
+%             clear Errx Erry
+%             
+%             Alphas(1,p)=xi;
+%             
+%             gamma(1,p)=yi;
+%             
+%         end
+%             
+%     end
+%         
+%     
+% end
+%         
+%         
 
 
 %%
