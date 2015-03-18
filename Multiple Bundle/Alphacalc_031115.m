@@ -33,6 +33,8 @@ L(1,1)=L1;
 
 B=qlin/hfg/Mflow;
 
+C=-2*DPT*(alpha-0.5)/L2p;
+
 for i=2:length(L)
     
     L(i,1)=L(i-1,1)+Lbund;
@@ -64,29 +66,29 @@ F11=@(x) B*Lbund/2/DPT*(x(22)+x(23))-x(11);
 
 F12=@(x) sum(x(1:12))-1;
 
-F13=@(x) DPT*((2*x(1)/B/L1)-1)-x(13);
+F13=@(x) C*L(1,1)+DPT-x(13);
 
-F14=@(x) DPT*((2*x(2)/B/Lbund)-(2*x(1)/B/L1)+1)-x(14);
+F14=@(x) C*L(2,1)+DPT-x(14);
 
-F15=@(x) DPT*((2*x(3)/B/Lbund)-(2*x(2)/B/Lbund)+(2*x(1)/B/L1)-1)-x(15);
+F15=@(x) C*L(3,1)+DPT-x(15);
 
-F16=@(x) DPT*((2*x(4)/B/Lbund)-(2*x(3)/B/Lbund)+(2*x(2)/B/Lbund)-(2*x(1)/B/L1)+1)-x(16);
+F16=@(x) C*L(4,1)+DPT-x(16);
 
-F17=@(x) DPT*((2*x(5)/B/Lbund)-(2*x(4)/B/Lbund)+(2*x(3)/B/Lbund)-(2*x(2)/B/Lbund)+(2*x(1)/B/L1)-1)-x(17);
+F17=@(x) C*L(5,1)+DPT-x(17);
 
-F18=@(x) DPT*((2*x(6)/B/Lbund)-(2*x(5)/B/Lbund)+(2*x(4)/B/Lbund)-(2*x(3)/B/Lbund)+(2*x(2)/B/Lbund)-(2*x(1)/B/L1)+1)-x(18);
+F18=@(x) C*L(6,1)+DPT-x(18);
 
-F19=@(x) DPT*((2*x(7)/B/Lbund)-(2*x(6)/B/Lbund)+(2*x(5)/B/Lbund)-(2*x(4)/B/Lbund)+(2*x(3)/B/Lbund)-(2*x(2)/B/Lbund)+(2*x(1)/B/L1)-1)-x(19);
+F19=@(x) C*L(7,1)+DPT-x(19);
 
-F20=@(x) DPT*((2*x(8)/B/Lbund)-(2*x(7)/B/Lbund)+(2*x(6)/B/Lbund)-(2*x(5)/B/Lbund)+(2*x(4)/B/Lbund)-(2*x(3)/B/Lbund)+(2*x(2)/B/Lbund)-(2*x(1)/B/L1)+1)-x(20);
+F20=@(x) C*L(8,1)+DPT-x(20);
 
-F21=@(x) DPT*((2*x(9)/B/Lbund)-(2*x(8)/B/Lbund)+(2*x(7)/B/Lbund)-(2*x(6)/B/Lbund)+(2*x(5)/B/Lbund)-(2*x(4)/B/Lbund)+(2*x(3)/B/Lbund)-(2*x(2)/B/Lbund)+(2*x(1)/B/L1)-1)-x(21);
+F21=@(x) C*L(9,1)+DPT-x(21);
 
-F22=@(x) DPT*((2*x(10)/B/Lbund)-(2*x(9)/B/Lbund)+(2*x(8)/B/Lbund)-(2*x(7)/B/Lbund)+(2*x(6)/B/Lbund)-(2*x(5)/B/Lbund)+(2*x(4)/B/Lbund)-(2*x(3)/B/Lbund)+(2*x(2)/B/Lbund)-(2*x(1)/B/L1)+1)-x(22);
+F22=@(x) C*L(10,1)+DPT-x(22);
 
-F23=@(x) DPT*((2*x(11)/B/Lbund)-(2*x(10)/B/Lbund)+(2*x(9)/B/Lbund)-(2*x(8)/B/Lbund)+(2*x(7)/B/Lbund)-(2*x(6)/B/Lbund)+(2*x(5)/B/Lbund)-(2*x(4)/B/Lbund)+(2*x(3)/B/Lbund)-(2*x(2)/B/Lbund)+(2*x(1)/B/L1)-1)-x(23);
+F23=@(x) C*L(11,1)+DPT-x(23);
 
-F24=@(x) (x(13)/2*(L1+Lbund))+Lbund*(sum(x(14:23)))+Lbund*x(24)/2-alpha*DPT*L2p-DPT*L1/2;
+F24=@(x) sum(x(13:24,1))/Kmax-(alpha*Lchannel*L2p);
 
 dF1dx1=-1;
 
@@ -158,192 +160,60 @@ dF12dx23=B*L1/2;
 
 dF12dx24=B*L1/2;
 
-dF13dx1=2*DPT/B/L1;
-
 dF13dx13=-1;
 
-dF14dx1=-2*DPT/B/L1;
-
-dF14dx2=2*DPT/B/L1;
-
-dF14dx14=1;
-
-dF15dx1=2*DPT/B/L1;
-
-dF15dx2=-2*DPT/B/L1;
-
-dF15dx3=2*DPT/B/L1;
+dF14dx14=-1;
 
 dF15dx15=-1;
 
-dF16dx1=-2*DPT/B/L1;
-
-dF16dx2=2*DPT/B/L1;
-
-dF16dx3=-2*DPT/B/L1;
-
-dF16dx4=2*DPT/B/L1;
-
-dF16dx16=1;
-
-dF17dx1=2*DPT/B/L1;
-
-dF17dx2=-2*DPT/B/L1;
-
-dF17dx3=2*DPT/B/L1;
-
-dF17dx4=-2*DPT/B/L1;
-
-dF17dx5=2*DPT/B/L1;
+dF16dx16=-1;
 
 dF17dx17=-1;
 
-dF18dx1=-2*DPT/B/L1;
-
-dF18dx2=2*DPT/B/L1;
-
-dF18dx3=-2*DPT/B/L1;
-
-dF18dx4=2*DPT/B/L1;
-
-dF18dx5=-2*DPT/B/L1;
-
-dF18dx6=2*DPT/B/L1;
-
-dF18dx18=1;
-
-dF19dx1=2*DPT/B/L1;
-
-dF19dx2=-2*DPT/B/L1;
-
-dF19dx3=2*DPT/B/L1;
-
-dF19dx4=-2*DPT/B/L1;
-
-dF19dx5=2*DPT/B/L1;
-
-dF19dx6=-2*DPT/B/L1;
-
-dF19dx7=2*DPT/B/L1;
+dF18dx18=-1;
 
 dF19dx19=-1;
 
-dF20dx1=-2*DPT/B/L1;
-
-dF20dx2=2*DPT/B/L1;
-
-dF20dx3=-2*DPT/B/L1;
-
-dF20dx4=2*DPT/B/L1;
-
-dF20dx5=-2*DPT/B/L1;
-
-dF20dx6=2*DPT/B/L1;
-
-dF20dx7=-2*DPT/B/L1;
-
-dF20dx8=2*DPT/B/L1;
-
-dF20dx20=1;
-
-dF21dx1=2*DPT/B/L1;
-
-dF21dx2=-2*DPT/B/L1;
-
-dF21dx3=2*DPT/B/L1;
-
-dF21dx4=-2*DPT/B/L1;
-
-dF21dx5=2*DPT/B/L1;
-
-dF21dx6=-2*DPT/B/L1;
-
-dF21dx7=2*DPT/B/L1;
-
-dF21dx8=-2*DPT/B/L1;
-
-dF21dx9=2*DPT/B/L1;
+dF20dx20=-1;
 
 dF21dx21=-1;
 
-dF22dx1=-2*DPT/B/L1;
-
-dF22dx2=2*DPT/B/L1;
-
-dF22dx3=-2*DPT/B/L1;
-
-dF22dx4=2*DPT/B/L1;
-
-dF22dx5=-2*DPT/B/L1;
-
-dF22dx6=2*DPT/B/L1;
-
-dF22dx7=-2*DPT/B/L1;
-
-dF22dx8=2*DPT/B/L1;
-
-dF22dx9=-2*DPT/B/L1;
-
-dF22dx10=2*DPT/B/L1;
-
-dF22dx22=1;
-
-dF23dx1=2*DPT/B/L1;
-
-dF23dx2=-2*DPT/B/L1;
-
-dF23dx3=2*DPT/B/L1;
-
-dF23dx4=-2*DPT/B/L1;
-
-dF23dx5=2*DPT/B/L1;
-
-dF23dx6=-2*DPT/B/L1;
-
-dF23dx7=2*DPT/B/L1;
-
-dF23dx8=-2*DPT/B/L1;
-
-dF23dx9=2*DPT/B/L1;
-
-dF23dx10=-2*DPT/B/L1;
-
-dF23dx11=2*DPT/B/L1;
+dF22dx22=-1;
 
 dF23dx23=-1;
 
-dF24dx13=(L1+Lbund)/2;
+dF24dx23=1;
 
-dF24dx14=Lbund;
+dF24dx22=1;
 
-dF24dx15=Lbund;
+dF24dx21=1;
 
-dF24dx16=Lbund;
+dF24dx20=1;
 
-dF24dx17=Lbund;
+dF24dx19=1;
 
-dF24dx18=Lbund;
+dF24dx18=1;
 
-dF24dx19=Lbund;
+dF24dx17=1;
 
-dF24dx20=Lbund;
+dF24dx16=1;
 
-dF24dx21=Lbund;
+dF24dx15=1;
 
-dF24dx22=Lbund;
+dF24dx14=1;
 
-dF24dx23=Lbund;
+dF24dx13=1;
 
-dF24dx24=Lbund/2;
+dF24dx24=1;
 %% Creation of Jacobian matrix and Function Matrix
 
 Jac=zeros(2*i,2*i);
 
 F=zeros(2*i,1);
 
-x=[0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;1;1;1;1;1;1;1;1;1];
+x=ones(2*i,1);
 
-iterations=10;
+iterations=10000;
 
 iters=zeros(1,iterations);
 
@@ -577,29 +447,27 @@ for j=1:iterations
     
     Jac(23,23)=dF23dx23;
     
-    Jac(24,1)=dF24dx1;
+    Jac(24,13)=dF24dx13;
     
-    Jac(24,2)=dF24dx2;
+    Jac(24,14)=dF24dx14;
     
-    Jac(24,3)=dF24dx3;
+    Jac(24,15)=dF24dx15;
     
-    Jac(24,4)=dF24dx4;
+    Jac(24,16)=dF24dx16;
     
-    Jac(24,5)=dF24dx5;
+    Jac(24,17)=dF24dx17;
     
-    Jac(24,6)=dF24dx6;
+    Jac(24,18)=dF24dx18;
     
-    Jac(24,7)=dF24dx7;
+    Jac(24,19)=dF24dx19;
     
-    Jac(24,8)=dF24dx8;
+    Jac(24,20)=dF24dx20;
     
-    Jac(24,9)=dF24dx9;
+    Jac(24,21)=dF24dx21;
     
-    Jac(24,10)=dF24dx10;
+    Jac(24,22)=dF24dx22;
     
-    Jac(24,11)=dF24dx11;
-    
-    Jac(24,12)=dF24dx12;
+    Jac(24,23)=dF24dx23;
     
     Jac(24,24)=dF24dx24;
     
@@ -653,7 +521,7 @@ for j=1:iterations
     
     deltas=-Jac\F;
     
-    x=x+deltas;
+    x=x+(2*deltas);
     
     err=max(abs(deltas));
     

@@ -23,14 +23,21 @@ DPT=0.10338;
 
 L2p=Lchannel-Lsat;
 
-FullBunds=floor(L2p)/Lbund;
+FullBunds=floor(L2p/Lbund);
 
 L1=L2p-(FullBunds*Lbund);
 
-L=zeros(Fullbunds+1,1);
+L=zeros(FullBunds+1,1);
 
 L(1,1)=L1;
 
-for i=1:
+B=qlin/hfg/Mflow;
+
+C=-2*DPT*(alpha-0.5)/L2p;
+
+for i=2:length(L)
+    
+    L(i,1)=L(i-1,1)+Lbund;
+end
 
 
