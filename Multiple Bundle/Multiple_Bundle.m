@@ -1,19 +1,19 @@
 %% Initial Variables
 %
 
-Qchannel=.150; %MW channel power
+Qchannel=0.150; %MW channel power
 
 bunds=12; %number of bundles
 
-H=0; %m height difference from inlet/outlet headers
+H=2.2; %m height difference from inlet/outlet headers
 
 hmod=1000; %W/m^2.K heat transfer coefficient 
 
-Tenter=300; %C Entering coolant temperature
+Tenter=100; %C Entering coolant temperature
 
-PSH=100; %kPa supply header pressure
+PSH=114; %kPa supply header pressure
 
-PVH=80; %kPa vent header pressure
+PVH=134; %kPa vent header pressure
 
 Tmod=60; %C Moderator temperature
 
@@ -48,7 +48,7 @@ eCT=ePT;% emissivity for calandria tube
 
 %% Initial Calculated Variables
 
-Peval=(PSH+PVH)/2; % system evaluation pressure
+Peval=(((PSH+PVH)/2)+(XSteam('rho_pT',PSH/100,Tenter)*9.81*H/1000))/100; % system evaluation pressure
 
 roc=doutclad/2; %m outer cladding radius
 
@@ -81,7 +81,7 @@ DhPT=4*Aflow/(pi()*DPT); % pressure tube hydraulic diameter
 
 %% pressure drop calculation based on density difference as well as header pressure
 
-deltaP=(PSH)-PVH+((9.81*H*(XSteam('rhoL_p',Peval)-XSteam('rhoV_p',Peval)))/1000);
+
 
 %% Resistance Calculation from liquid flow data
 
@@ -89,7 +89,7 @@ DP = [165;
 262.5000;
 520.5000;
 258;
-174];  % measured reference pressure drops across the inlet feeder, end fitting, core, and exit end fitting and feeder respectively
+174];  % kPa measured reference pressure drops across the inlet feeder, end fitting, core, and exit end fitting and feeder respectively
 
 M=25.8; % kg/s reference mass flowrate
 
@@ -102,6 +102,8 @@ reff=keff.*Rho;
 RCH=reff(3); %effective resistance of fuel channel
 
 RF=sum(reff(4:5)); %effective resistance of end fitting and feeder
+
+
 
 %% mass of zirc in elements
 Tref=310; % C reference temperature
@@ -120,39 +122,23 @@ mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref; %kg mass of zirconium in calandria
 
 mfuel=Lbund*pi()/4*dfuel^2*rhoUO2(Tref); %kg mass of fuel within one fuel element
 
-%% Voidfraction/Exit temperature relation 
+%% Voidfraction/Exit temperature/mass flow relation for heat up to final temperature
 
-Tvap=zeros(1,100);
+%% Set exit temperature and properties
 
-Tvap(1,1)=XSteam('Tsat_p',Peval);
+Tout=XSteam('Tsat_p',Peval)+2; %Exit vapor temperature
 
-Tout=zeros(1,100);
+Temps=linspace(Tout,Tout+100,100);
 
-Tout(1,1)=XSteam('Tsat_p',Peval);
+alpha=zeros(1,length(Temps));
 
-M1=zeros(1,100);
-
-M2=zeros(1,100);
-
-deltas=zeros(100,100);
-
-for i=2:length(Tvap)
+for i=1:100
     
-    Tmax=3000; % degrees celsius
+    alpha(1,i)=Alphacalc(PSH,PVH,Tenter,Temps(1,i),Qchannel,RCH,RF,H);
     
-    Tvap(1,i)=Tvap(1,i-1)+((Tmax-Tvap(1,1))/length(Tvap));
-    
-    Tout(1,i)=Tout(1,i-1)+((Tmax-Tout(1,1))/length(Tout));
-    
-    M1(1,i)=Qchannel*1000*(XSteam('h_pT',Peval,Tvap(1,i))-XSteam('h_pT',Peval,Tenter));
-    
-    Res=Alphacalc(PSH,PVH,Tenter,Tout(1,i),Qchannel,RCH,RF);
-    
-    M2(1,i)=Res(2,1);
 end
 
-plotyy(Tvap,M1,Tvap,M2)
-
-
-
-            
+plot(Temps,alpha);
+    
+    
+    
