@@ -1,8 +1,9 @@
 function res=Alphacalc(PSH,PVH,Tenter,Tout,Qchannel,RCH,RF,Hchannel)
 
+
 Peval=(((PSH+PVH)/2)+(XSteam('rho_pT',PSH/100,Tenter)*9.81*Hchannel/1000))/100; % system evaluation pressure
 
-hin=XSteam('h_pT',Peval,Tenter);
+hin=XSteam('hL_T',Tenter);
 
 rhovap=XSteam('rho_pT',Peval,Tout);
 
@@ -25,4 +26,6 @@ for i=1:50
     a=alpha^2*rhoave/rhovap;
 end
 
-res=alpha;
+mflow=wsmx*(1+x)/(1-alpha);
+
+res=[alpha;mflow];

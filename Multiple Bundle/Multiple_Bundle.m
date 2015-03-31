@@ -1,7 +1,7 @@
 %% Initial Variables
 %
 
-Qchannel=0.150; %MW channel power
+Qchannel=0.100; %MW channel power
 
 bunds=12; %number of bundles
 
@@ -132,13 +132,68 @@ Temps=linspace(Tout,Tout+100,100);
 
 alpha=zeros(1,length(Temps));
 
-for i=1:100
+Length=linspace(0,Lchannel,100);
+
+Lsection=Lchannel/length(Length);
+
+Heights=zeros(1,length(Length));
+
+Hmatrix=linspace(0,H+1,100);
+
+Heightchange=zeros(1,length(Length));
+
+Avap=zeros(1,length(Heights));
+
+Achange=zeros(1,length(Heights));
+
+AlphaMax=Alphacalc(PSH,PVH,Tenter,Tout,Qchannel,RCH,RF,H);
+
+for i=1:length(Length)
     
-    alpha(1,i)=Alphacalc(PSH,PVH,Tenter,Temps(1,i),Qchannel,RCH,RF,H);
+    RCHL=RCH/Lchannel*Length(1,i);
+    
+    QchannelL=Qchannel/Lchannel*Length(1,i);
+    
+    Res=Alphacalc(PSH,PVH,Tenter,Tout,QchannelL,RCHL,((RCH/Lchannel*(Lchannel-Length(1,i)))+RF),H);
+    
+    alpha(1,i)=Res(1,1);
+    
+    if i==1
+        
+        Avap(1,i)=DPT*Length(1,i)*alpha(1,i);
+        
+        Heights(1,i)=DPT;
+        
+    else  
+        
+        Heights(1,i)=DPT-(alpha(1,i)*DPT);      
+                  
+     end
     
 end
 
-plot(Temps,alpha);
+
+void=zeros(1,length(Heights));
+
+mflow=zeros(1,length(Heights));
+
+for j=1:length(Heights)
+    
+    Res=Alphacalc(PSH,PVH,Tenter,Tout,Qchannel,RCH,RF,Hmatrix(1,j));
+
+    void(1,j)=Res(1,1);
+    
+    mflow(1,j)=Res(2,1);
+    
+end
+
+plotyy(Hmatrix,mflow,Hmatrix,void)
+
+figure
+
+plot(Length,Heights)
+
+
     
     
     
