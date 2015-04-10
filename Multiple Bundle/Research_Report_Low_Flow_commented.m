@@ -2177,7 +2177,7 @@ for n=2:ind
     
 end
 
-    Tc=[Tfuel;Tclad;Tvap;TPT;TCT];
+   Tc=[Tfuel;Tclad;Tvap;TPT;TCT];
     
    plot(time,Tc)
    

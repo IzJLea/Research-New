@@ -1,7 +1,7 @@
 %% Initial Variables
 %
 
-Qchannel=0.050; %MW channel power
+Qchannel=0.150; %MW channel power
 
 bunds=12; %number of bundles
 
@@ -46,10 +46,9 @@ ePT=eclad;% emissivity for pressure tube
 eCT=ePT;% emissivity for calandria tube
 
 
-
 %% Initial Calculated Variables
 
-Peval=(((PSH+PVH)/2)+(XSteam('rho_pT',PSH/100,Tenter)*9.81*H/1000))/100; % system evaluation pressure
+
 
 roc=doutclad/2; %m outer cladding radius
 
@@ -123,123 +122,30 @@ mCT=((DCT+(2*tCT))^2-(DPT)^2)/4*Lbund*rhoref; %kg mass of zirconium in calandria
 
 mfuel=Lbund*pi()/4*dfuel^2*rhoUO2(Tref); %kg mass of fuel within one fuel element
 
-%% Voidfraction/Exit temperature/mass flow relation for heat up to final temperature
 
-%% Set exit temperature and properties
+%% initial conditions
 
-Tout=XSteam('Tsat_p',Peval)+200; %Exit vapor temperature
+iter=100;
 
-Temps=linspace(Tout,Tout+100,100);
+damp=1;
 
-alpha=zeros(1,length(Temps));
+err=zeros(1,iter);
 
-Length=linspace(0,Lchannel,100);
+Peval=zeros(1,iter);
 
-Lsection=Lchannel/length(Length);
+Tvap=zeros(1,iter);
 
-Heights=zeros(1,length(Length));
+Peval(1,1)=(((PSH+PVH)/2)+(XSteam('rho_pT',PSH/100,Tenter)*9.81*H/1000))/100;
 
-Hmatrix=linspace(0,H+6,100);
+Tvap(1,1)=XSteam('Tsat_p',Peval(1,1))+1;
 
-Heightchange=zeros(1,length(Length));
-
-Avap=zeros(1,length(Heights));
-
-Achange=zeros(1,length(Heights));
-
-AlphaMax=Alphacalc(PSH,PVH,Tenter,Tout,Qchannel,RCH,RF,H);
-
-mvap=zeros(1,length(Heights));
-
-for i=1:length(Length)
+Peval(1,1)=(((PSH+PVH)/2)+((XSteam('rho_pT',Peval(1,1),Tenter)-XSteam('rho_pT',Peval(1,1),Tvap(1,1)))*9.81*H/1000))/100;
     
-    RCHL=RCH/Lchannel*Length(1,i);
+Tvap(1,1)=XSteam('Tsat_p',Peval(1,1))+1;
     
-    QchannelL=Qchannel/Lchannel*Length(1,i);
+Peval(1,1)=(((PSH+PVH)/2)+((XSteam('rho_pT',Peval(1,1),Tenter)-XSteam('rho_pT',Peval(1,1),Tvap(1,1)))*9.81*H/1000))/100;
     
-    Res=Alphacalc(PSH,PVH,Tenter,Tout,QchannelL,RCHL,((RCH/Lchannel*(Lchannel-Length(1,i)))+RF),H);
-    
-    alpha(1,i)=Res(1,1);
-    
-    mvap(1,i)=Res(2,1);
-    
-    if i==1
-        
-        Heights(1,i)=DPT;
-        
-    else  
-        
-        Heights(1,i)=DPT-(alpha(1,i)*DPT);      
-                  
-    end
-    
-end
-Power=linspace(Qchannel,Qchannel+0.4,41);
+Tvap(1,1)=XSteam('Tsat_p',Peval(1,1))+1;
 
-void=zeros(length(Power),length(Heights));
+Res=Alphacalc(PSH,PVH,Tenter,Tvap(1,1),Qchannel,RCH,RF,H);
 
-mflow=zeros(length(Power),length(Heights));
-
-dP=zeros(length(Power),length(Heights));
-
-rhoout=zeros(length(Power),length(Heights));
-
-houtrev=zeros(length(Power),length(Heights));
-
-Toutrev=zeros(length(Power),length(Heights));
-
-moutrev=zeros(length(Power),length(Heights));
-
-for k=1:length(Power)
-    for j=1:length(Heights)
-    
-        Res=Alphacalc(PSH,PVH,Tenter,Tout,Power(1,k),RCH,RF,Hmatrix(1,j));
-
-        void(k,j)=Res(1,1);
-    
-        mflow(k,j)=Res(2,1);
-    
-        dP(k,j)=Res(4,1);
-    
-        rhoout(k,j)=Res(5,1);
-    
-        houtrev(k,j)=Res(6,1);
-        
-        Toutrev(k,j)=Res(7,1);
-        
-        moutrev(k,j)=Res(8,1);
-    end
-end
-
-minmax=[mflow(1,1:length(mflow));mflow(size(mflow,1),1:length(mflow))];
-
-mcheck=[mflow(21,1:length(mflow));moutrev(21,1:length(mflow))];
-
-plot(Hmatrix,mflow);
-
-figure
-
-plot(Hmatrix,mcheck);
-
-% figure
-% 
-% plot(Hmatrix,Toutrev(21,1:length(mflow)));
-
-
-% 
-% figure
-% 
-% plot(Length,Heights);
-% 
-% figure
-% 
-% plot(Length,mvap);
-% 
-% figure
-% 
-% plot(Hmatrix,dP);
-
-
-    
-    
-    
