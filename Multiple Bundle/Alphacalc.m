@@ -21,7 +21,7 @@ x=(XSteam('hL_p',Peval)-hin)/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
 
 wsmx=Qchannel*1000/(XSteam('hV_p',Peval)-XSteam('hL_p',Peval));
 
-for i=1:100
+for i=1:50
     
     alpha=1/(1+((1+x)/wsmx*sqrt(deltaP*rhoave/(RCH+(a*RF)))));
     
@@ -38,7 +38,7 @@ Toutrev=0;
 
 mflowrev=0;
 
-if deltaP<0
+if deltaP<0 || mflow<0
     
     deltaP=(PVH-PSH);
     

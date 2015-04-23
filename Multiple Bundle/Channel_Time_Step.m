@@ -1,6 +1,11 @@
-function res=Channel_Time_Step(Tfuel,Tclad,Tvap,TPT,TCT,Tmod,div,Peval,alpha,mflow,Qch,hin,hmod,mfuel,mclad,mPT,mCT)
+function res=Channel_Time_Step(Tfuel,Tclad,Tvap,TPT,TCT,Tmod,div,Peval,alpha,mflow,Qch,hin,hmod,mfuel,mclad,mPT,mCT,moxide,t)
 
 %% Channel Properties
+if mflow<0
+    
+    mflow=-mflow;
+end
+
 Dh=0.0074; % hydraulic diameter of the channel
 
 Aflow=0.0035; %m^2 Flow area in channel
@@ -51,7 +56,7 @@ rict=DCT/2; % inner calandria tube radius
 
 roct=rict+tCT;% outer calandria tube radius
 
-Qel=Qch/37;
+Qel=Qch/37; % Power in MW
 %% Temperature calculations
 
 if Tvap==XSteam('Tsat_p',Peval)
@@ -114,7 +119,7 @@ else
     hout=XSteam('h_pT',Peval,Tvap+0.1)*1000;
 end
 
-kuo2=kUO2(Tfuel)*1000; %kW/mK
+kuo2=kUO2(Tfuel); %W/mK
 
 kclad=kzirc(Tclad);
 
@@ -157,6 +162,16 @@ B2=-1/mclad/Cpclad*((1/R1)+(1/R2)+(hrad*Arad));
 C2=Tvap/mclad/Cpclad/R2;
     
 D2=hrad*Arad/mclad/Cpclad*TPT;
+
+F=QZirc_Steam(moxide,mclad,Tclad,t,div,Afuel,alpha)/mclad/Cpclad;
+
+dm=F(1,1);
+
+F2=F(2,1)/Cpclad/mclad;
+% 
+% dm=0;
+% 
+% F2=0;
     
 %Eq.3 coefficients
     
@@ -190,7 +205,7 @@ F5=Tmod/mCT/CpCT/R5;
     
 Tfuel=(Tfuel*exp(A1*div))+((1-exp(A1*div))*((B1+F1)/-A1));
     
-Tclad=(Tclad*exp(B2*div))+((1-exp(B2*div))*((A2+C2+D2)/-B2));
+Tclad=(Tclad*exp(B2*div))+((1-exp(B2*div))*((A2+C2+D2+F2)/-B2));
     
 Tvap=(Tvap*exp(C3*div))+((1-exp(C3*div))*((B3+D3+F3)/-C3));
     
@@ -198,7 +213,7 @@ TPT=(TPT*exp(D4*div))+((1-exp(D4*div))*((B4+C4+E4)/-D4));
     
 TCT=(TCT*exp(E5*div))+((1-exp(E5*div))*((D5+F5)/-E5));
 
-res=[Tfuel;Tclad;Tvap;TPT;TCT];
+res=[Tfuel;Tclad;Tvap;TPT;TCT;dm;F2*Cpclad*mclad];
 
 
 

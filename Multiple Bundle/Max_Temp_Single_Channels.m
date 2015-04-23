@@ -1,25 +1,10 @@
-%% Initial channel conditions: liquid at Tenter is flowing in channel followed by initial voiding to saturation temp 
-% steam. 
+function res=Max_Temp_Single_Channels(Qchannel,Hchannel,Tenter,PSH,PVH,time,div)
 
 Lchannel=6; %m
-
-Qchannel=0.050; %MW
-
-Hchannel=1; %m
-
-Tenter=100; %Celsius
 
 Tmod=60;
 
 hmod=1000; %W/m^2.K heat transfer coefficient 
-
-time=3000; %s
-
-div=0.1;
-
-PSH=114; 
-
-PVH=134;
 
 doutclad=0.0138; %m cladding outer diameter
 
@@ -119,7 +104,7 @@ mflow(1,1)=Init(2,1);
 
 %% Initial Temperature calculation
 
-Init_Temp=Initial_Temp(mflow(1,1),Tvap(1,1),Tmod,Qchannel,Peval(1,1));
+Init_Temp=Initial_Temp(mflow,Tvap(1,1),Tmod,Qchannel,Peval(1,1));
 
 Tfuel(1,1)=Init_Temp(1,1);
 
@@ -191,32 +176,39 @@ for i=2:(time/div)+1
         
         TPT(1,i)=max(TPT);
     end
-    
-    
-        
-   
-        
-        
-    
+          
     moxide(1,i)=moxide(1,i-1)+B(6,1);
     
     Qzirconium(1,i)=B(7,1);
 end
 
-Temps=[Tfuel;Tclad;Tvap;TCT;TPT];
 
-plot(t,Temps);
-
-figure
-
-plot(t,alpha);
-
-figure 
-
-plot(t,mflow);
-
-
-
-
-
-
+    
+    Tfuelmax=Tfuel(1,i);
+    
+    Tcladmax=Tclad(1,i);
+    
+    Tvapmax=Tvap(1,i);
+    
+    TPTmax=TPT(1,i);
+    
+    TCTmax=TCT(1,i);
+    
+    mflowmax=mflow(1,i);
+%     
+%     if mflowmax<0
+%         
+%         Tr=Treverse(-mflow,Tvapmax,Tmod,Qchannel,Peval);
+%         
+%         Tfuelmax=Tr(1,1);
+%     
+%         Tcladmax=Tr(2,1);
+%     
+%         TPTmax=Tr(4,1);
+%     
+%         TCTmax=Tr(5,1);
+%         
+%     end
+    
+    
+    res=[Tfuelmax;Tcladmax;Tvapmax;TPTmax;TCTmax;mflowmax];
