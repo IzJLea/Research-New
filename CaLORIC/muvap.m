@@ -1629,8 +1629,8 @@ else
 end
 
 if Tcool>1700
-    
-    error('Vapor Temp too high for muvap calculation');
+    % if temp is too high use highest available value
+    mu=muvap(length(muvap),1);
 end
     
     

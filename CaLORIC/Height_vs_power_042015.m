@@ -1,4 +1,5 @@
-%% This script is to calculate the flow, 
+%% This script calculates the Maximum Temperature of the channel elements for liquid heights from 1 to 12 meters and decay power of 0.05 to 0.25 MW
+
 tic
 time=3000; %time is seconds
 
@@ -12,7 +13,7 @@ Tenter=100;
 
 Qchannel=linspace(0.05,0.25,5);
 
-Hchannel=linspace(1,12,24);
+Hchannel=[1,2,2.5,3,3.5,4];
 % 
 % Qchannel=0.05;
 % 
@@ -32,7 +33,7 @@ mflow=zeros(length(Qchannel),length(Hchannel));
 
 for i=1:length(Qchannel)
     for j=1:length(Hchannel)
-        Iteration=Max_Temp_Single_Channels(Qchannel(1,i),Hchannel(1,j),Tenter,PSH,PVH,time,div);
+        Iteration=Max_Temp_Single_Channels(Qchannel(1,i),Hchannel(1,j),Tenter,PSH,PVH,time,div,Lchannel);
         
         Tfuel(i,j)=Iteration(1,1);
         
@@ -45,19 +46,21 @@ for i=1:length(Qchannel)
         TCT(i,j)=Iteration(5,1);
         
         mflow(i,j)=Iteration(6,1);
+        
+        clear Iteration
     end
 end
 
 filename = 'Calandria_Temperatures.xlsx';
-xlswrite('Calandria_Temperatures.xlsx',Tfuel,1,'B1:Y5');
-xlswrite('Calandria_Temperatures.xlsx',Tclad,2,'B1:Y5');
-xlswrite('Calandria_Temperatures.xlsx',Tvap,3,'B1:Y5');
-xlswrite('Calandria_Temperatures.xlsx',TPT,4,'B1:Y5');
-xlswrite('Calandria_Temperatures.xlsx',TCT,5,'B1:Y5');
-xlswrite('Calandria_Temperatures.xlsx',mflow,6,'B1:Y5');
-xlswrite('Calandria_Temperatures.xlsx',Qchannel,7,'D4:H4');
+xlswrite('Calandria_Temperatures.xlsx',Tfuel,1,'B1:G11');
+xlswrite('Calandria_Temperatures.xlsx',Tclad,2,'B1:G11');
+xlswrite('Calandria_Temperatures.xlsx',Tvap,3,'B1:G11');
+xlswrite('Calandria_Temperatures.xlsx',TPT,4,'B1:G11');
+xlswrite('Calandria_Temperatures.xlsx',TCT,5,'B1:G11');
+xlswrite('Calandria_Temperatures.xlsx',mflow,6,'B1:G11');
+xlswrite('Calandria_Temperatures.xlsx',Qchannel.',7,'C4:C15');
 
-xlswrite('Calandria_Temperatures.xlsx',Hchannel.',7,'C4:C27');
+xlswrite('Calandria_Temperatures.xlsx',Hchannel,7,'D3:H3');
 
 toc
         

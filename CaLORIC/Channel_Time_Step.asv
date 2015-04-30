@@ -1,4 +1,4 @@
-function res=Channel_Time_Step(Tfuel,Tclad,Tvap,TPT,TCT,Tmod,div,Peval,alpha,mflow,Qch,hin,hmod,mfuel,mclad,mPT,mCT,moxide,t)
+function res=Channel_Time_Step(Tfuel,Tclad,Tvap,TPT,TCT,Tmod,div,Peval,alpha,mflow,Qch,hin,hmod,mfuel,mclad,mPT,mCT,moxide,toxide,Lchannel)
 % requirement for t should be checked. Replace with time of oxidation for Qzirc calculation. 
 %% Channel Properties
 if mflow<0
@@ -21,8 +21,6 @@ tclad=0.00038; %m thickness of cladding
 roc=doutclad/2; %m outer cladding radius
 
 ric=roc-tclad; %m inner cladding radius
-
-Lchannel=6; %m length of fuel channel
 
 Lbund=Lchannel; %m length of bundle (for this initial simulation, entire channel will be simulated as one bundle)
 
@@ -161,27 +159,27 @@ B2=-1/mclad/Cpclad*((1/R1)+(1/R2)+(hrad*Arad));
     
 C2=Tvap/mclad/Cpclad/R2;
     
-D2=hrad*Arad/mclad/Cpclad*TPT;
+D2=TPT*hrad*Arad/mclad/Cpclad;
 
-F=QZirc_Steam(moxide,mclad,Tclad,t,div,Afuel,alpha)/mclad/Cpclad;
+F=QZirc_Steam(moxide,mclad,Tclad,toxide,div,Afuel,alpha);
 
 dm=F(1,1);
 
 F2=F(2,1)/Cpclad/mclad;
-% 
+
 % dm=0;
 % 
 % F2=0;
     
 %Eq.3 coefficients
     
-B3=37*Tclad/Mcool/Cpvap/R2;
+B3=37*alpha*Tclad/Mcool/Cpvap/R2;
     
-C3=-1/Mcool/Cpvap*((37/R2)+(1/R3));
+C3=-1/Mcool/Cpvap*((37*alpha/R2)+(1/R3));
     
 D3=TPT/Mcool/Cpvap/R3;
     
-F3=mflow/Mcool*(hout-hin)/Cpvap;
+F3=-mflow/Mcool*(hout-hin)/Cpvap;
     
 %Eq.4 coefficients
     
