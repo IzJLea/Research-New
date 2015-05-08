@@ -11,9 +11,11 @@ PSH=114; %kPa Supply Vent pressure
 
 Tenter=100; 
 
-Qchannel=linspace(0.05,0.25,5);
+Qchannel=linspace(0.1,0.5,9);
 
-Hchannel=[1,2,2.5,3,3.5,4];
+Hchannel=linspace(2,3,11);
+
+Lchannel=6;
 % 
 % Qchannel=0.05;
 % 
@@ -51,16 +53,16 @@ for i=1:length(Qchannel)
     end
 end
 
-filename = 'Calandria_Temperatures.xlsx';
-xlswrite('Calandria_Temperatures.xlsx',Tfuel,1,'B1:G11');
-xlswrite('Calandria_Temperatures.xlsx',Tclad,2,'B1:G11');
-xlswrite('Calandria_Temperatures.xlsx',Tvap,3,'B1:G11');
-xlswrite('Calandria_Temperatures.xlsx',TPT,4,'B1:G11');
-xlswrite('Calandria_Temperatures.xlsx',TCT,5,'B1:G11');
-xlswrite('Calandria_Temperatures.xlsx',mflow,6,'B1:G11');
-xlswrite('Calandria_Temperatures.xlsx',Qchannel.',7,'C4:C15');
+filename = 'Calandria_Temperatures_2to3m.xlsx';
+xlswrite('Calandria_Temperatures_2to3m.xlsx',Tfuel,1,'B1:L9');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',Tclad,2,'B1:L9');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',Tvap,3,'B1:L9');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',TPT,4,'B1:L9');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',TCT,5,'B1:L9');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',mflow,6,'B1:L9');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',Qchannel.',7,'C4:C12');
 
-xlswrite('Calandria_Temperatures.xlsx',Hchannel,7,'D3:H3');
+xlswrite('Calandria_Temperatures_2to3m.xlsx',Hchannel,7,'D3:N3');
 
 toc
         

@@ -1,6 +1,8 @@
-function res=Single_Channel(Qchannel,Hchannel,Tenter,PSH,PVH,time,div,Lchannel)
-%% Gives Temperature Transient for the elements of a single channel
+% Single Channel Draining
 
+function res=Single_Draining_Channel(Qchannel,Hchannel,Lfeeder,Tenter,PSH,PVH,time,div,Lchannel)
+
+w=0.9; % weight put on new value
 
 Tmod=60;
 
@@ -12,6 +14,10 @@ tclad=0.00038; %m thickness of cladding
 
 DPT=0.10338; %m inner pressure tube diameter
 
+Dfeed=DPT/2;
+
+Afeeder=pi()/4*Dfeed^2;
+
 DCT=0.12869;%m inner calandria tube thickness
 
 tPT=0.00424; %m pressure tube thickness
@@ -19,6 +25,8 @@ tPT=0.00424; %m pressure tube thickness
 tCT=0.0014; %m calandria tube thickness
 
 dfuel=0.0122; %m fuel outer diameter
+
+vfrac=(1/(1-cos(pi()/4)))-(cos(pi()/4)*Lfeeder/Hchannel/(1-cos(pi()/4)));
 
 %% mass of zirc in elements
 Tref=310; % C reference temperature
@@ -65,6 +73,10 @@ mflow=zeros(1,(time/div)+1);
 
 moxide=zeros(1,(time/div)+1);
 
+Hcoolant=zeros(1,(time/div)+1);
+
+Lwet=zeros(1,(time/div)+1);
+
 Peval=zeros(1,(time/div)+1);
 
 Qzirconium=zeros(1,(time/div)+1);
@@ -83,7 +95,6 @@ t=zeros(1,(time/div)+1);
 
 toxide=zeros(1,(time/div)+1);
 
-
 for j=2:(time/div)+1
     
     t(1,j)=t(1,j-1)+div;
@@ -97,15 +108,21 @@ Peval(1,1)=(PSH+(XSteam('rhoL_T',Tenter)*9.81*Hchannel/1000))/100;
 
 %% Initial flow calculation
 
-Tvap(1,1)=XSteam('Tsat_p',Peval(1,1));
+Tvap(1,1)=XSteam('Tsat_p',Peval(1,1))+0.1;
 
-Init=Alphacalc(PSH,PVH,Tenter,Tvap(1,1),Qchannel,RCH,RF,Hchannel);
+Hcoolant(1,1)=Hchannel;
+
+Lwet(1,1)=Lfeeder;
+
+Init=Alphacalc(PSH,PVH,Tenter,Tvap(1,1),Qchannel,RCH,RF,Hcoolant(1,1));
 
 mflow(1,1)=Init(2,1);
 
+Peval(1,1)=Init(3,1);
+
 %% Initial Temperature calculation
 
-Init_Temp=Initial_Temp(mflow,Tvap(1,1),Tmod,Qchannel,Peval(1,1),Lchannel);
+Init_Temp=Initial_Temp(mflow(1,1),Tvap(1,1),Tmod,Qchannel,Peval(1,1),Lchannel);
 
 Tfuel(1,1)=Init_Temp(1,1);
 
@@ -119,7 +136,25 @@ TCT(1,1)=Init_Temp(4,1);
 
 for i=2:(time/div)+1
     
-    A=Alphacalc(PSH,PVH,Tenter,Tvap(1,i-1),Qchannel,RCH,RF,Hchannel);
+    
+    
+    
+    Lwet(1,i)=Lwet(1,i-1)-(mflow(1,i-1)*div/XSteam('rhoL_p',Peval(1,i-1))/Afeeder);
+    
+    if Lwet(1,i)>vfrac*Hchannel
+        
+        Hcoolant(1,i)=(cos(pi()/4)*Lwet(1,i))+(vfrac*Hchannel*(1-cos(pi()/4)));
+    else
+        Hcoolant(1,i)=Lwet;
+       
+    end
+    
+    if mflow(1,i-1)<=0
+       Hcoolant(1,i)=0;
+       Lwet(1,i)=0; 
+    end
+    
+    A=Alphacalc(PSH,PVH,Tenter,Tvap(1,i-1),Qchannel,RCH,RF,Hcoolant(1,i));
     
     alpha(1,i)=A(1,1);
     if isnan(alpha(1,i))
@@ -140,7 +175,7 @@ for i=2:(time/div)+1
     end
     
        
-    hin=XSteam('hV_p',Peval(1,i));
+    hin=XSteam('hV_p',Peval(1,i))*1000;
     
     if Tvap(1,i-1)>1227
         
@@ -151,63 +186,44 @@ for i=2:(time/div)+1
             
     B=Channel_Time_Step(Tfuel(1,i-1),Tclad(1,i-1),Tvap(1,i-1),TPT(1,i-1),TCT(1,i-1),Tmod,div,Peval(1,i),alpha(1,i),mflow(1,i),Qchannel,hin,hmod,mfuel,mclad,mPT,mCT,moxide(1,i-1),toxide(1,i),Lchannel);
     
-    Tfuel(1,i)=B(1,1);
+    Tfuel(1,i)=((1-w)*Tfuel(1,i-1))+(w*B(1,1));
     
     if isnan(Tfuel(1,i))
         
         Tfuel(1,i)=max(Tfuel);
     end
     
-    Tclad(1,i)=B(2,1);
+    Tclad(1,i)=((1-w)*Tclad(1,i-1))+(w*B(2,1));
     
     if isnan(Tclad(1,i))
         
         Tclad(1,i)=max(Tclad);
     end
     
-    Tvap(1,i)=B(3,1);
+    Tvap(1,i)=((1-w)*Tvap(1,i-1))+(w*B(3,1));
     
     if isnan(Tvap(1,i))
         
         Tvap(1,i)=max(Tvap);
     end
     
-    TCT(1,i)=B(4,1);
+    TPT(1,i)=((1-w)*TPT(1,i-1))+(w*B(4,1));
     
     if isnan(TCT(1,i))
         
         TCT(1,i)=max(TCT);
     end
     
-    TPT(1,i)=B(5,1);
+    TCT(1,i)=((1-w)*TCT(1,i-1))+(w*B(5,1));
     
     if isnan(TPT(1,i))
         
         TPT(1,i)=max(TPT);
     end
           
-    moxide(1,i)=moxide(1,i-1)+B(6,1);
+    moxide(1,i)=((1-w)*moxide(1,i-1))+(w*B(6,1));
     
     Qzirconium(1,i)=B(7,1);
 end
 
-
-    
-   
-%     
-%     if mflowmax<0
-%         
-%         Tr=Treverse(-mflow,Tvapmax,Tmod,Qchannel,Peval);
-%         
-%         Tfuelmax=Tr(1,1);
-%     
-%         Tcladmax=Tr(2,1);
-%     
-%         TPTmax=Tr(4,1);
-%     
-%         TCTmax=Tr(5,1);
-%         
-%     end
-    
-    
-    res=[Tfuel;Tclad;Tvap;TPT;TCT;mflow;alpha];
+res=[Peval;Tfuel;Tclad;Tvap;TPT;TCT;mflow;alpha;Hcoolant;Lwet];

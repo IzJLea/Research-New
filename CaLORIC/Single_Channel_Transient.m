@@ -1,8 +1,8 @@
 % Single Channel temperature Profile calculation
 tic
-Qchannel=0.05; %MW
+Qchannel=0.15; %MW
 
-Hchannel=1; %m
+Hchannel=2.1; %m
 
 Tenter=100;
 
