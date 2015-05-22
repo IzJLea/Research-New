@@ -1,18 +1,18 @@
 % Single Channel temperature Profile calculation
-tic
+
 Qchannel=0.15; %MW
 
-Hchannel=2.1; %m
+Hchannel=11; %m
 
 Tenter=100;
 
-PSH=114;
+PSH=10000;
 
-PVH=134;
+PVH=10050;
 
-time=3000;
+time=3000;           
 
-div=0.1;
+div=0.01;
 
 Lchannel=6;
 
@@ -26,4 +26,3 @@ for i=2:length(t)
 end
 
 plot(t,Res(3,1:length(Res)),t,Res(1,1:length(Res)));
-toc

@@ -1,7 +1,7 @@
 function res=Single_Channel(Qchannel,Hchannel,Tenter,PSH,PVH,time,div,Lchannel)
 %% Gives Temperature Transient for the elements of a single channel
 
-w=0.9; % weight put on new value
+w=1; % weight put on new value
 
 Tmod=60;
 
@@ -106,7 +106,7 @@ mflow(1,1)=Init(2,1);
 
 %% Initial Temperature calculation
 
-Init_Temp=Initial_Temp(mflow,Tvap(1,1),Tmod,Qchannel,Peval(1,1),Lchannel);
+Init_Temp=Initial_Temp(mflow(1,1),Tvap(1,1),Tmod,Qchannel,Peval(1,1),Lchannel);
 
 Tfuel(1,1)=Init_Temp(1,1);
 

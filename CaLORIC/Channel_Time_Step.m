@@ -1,6 +1,7 @@
 function res=Channel_Time_Step(Tfuel,Tclad,Tvap,TPT,TCT,Tmod,div,Peval,alpha,mflow,Qch,hin,hmod,mfuel,mclad,mPT,mCT,moxide,toxide,Lchannel)
 % requirement for t should be checked. Replace with time of oxidation for Qzirc calculation. 
 %% Channel Properties
+
 if mflow<0
     
     mflow=-mflow;
@@ -210,6 +211,7 @@ Tvap=(Tvap*exp(C3*div))+((1-exp(C3*div))*((B3+D3+F3)/-C3));
 TPT=(TPT*exp(D4*div))+((1-exp(D4*div))*((B4+C4+E4)/-D4));
     
 TCT=(TCT*exp(E5*div))+((1-exp(E5*div))*((D5+F5)/-E5));
+
 
 res=[Tfuel;Tclad;Tvap;TPT;TCT;dm;F2*Cpclad*mclad];
 

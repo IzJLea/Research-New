@@ -3,17 +3,21 @@
 %and plots the temepratures of the five main components
 
 
-Qchannel=0.15;
+Qchannel=0.05;
 
-Hchannel=6;
+Qchannel2=0.05;
+
+Hchannel=11;
+
+Hchannel2=5;
 
 Lfeeder=10;
 
 Tenter=100;
 
-PSH=114;
+PSH=10000;
 
-PVH=134;
+PVH=10100;
 
 time=3000;
 
@@ -21,11 +25,11 @@ div=0.1;
 
 Lchannel=6;
 
-tic
+%%tic
 
 Results=Single_Draining_Channel(Qchannel,Hchannel,Lfeeder,Tenter,PSH,PVH,time,div,Lchannel);
 
-toc
+%%toc
 
 Tfuel=Results(1,1:length(Results));
 
@@ -45,12 +49,19 @@ Hcool=Results(8,1:length(Results));
 
 Lwet=Results(9,1:length(Results));
 
+Peval=Results(10,1:length(Results));
+
 t=linspace(0,time,(time/div)+1);
+
+
+
+figure
 
 plot(t,Tfuel,t,Tclad,t,Tvap,t,TPT,t,TCT);
 
 figure
 
 plot(t,mflow);
+
 
 

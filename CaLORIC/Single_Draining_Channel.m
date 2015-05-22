@@ -145,7 +145,7 @@ for i=2:(time/div)+1
         
         Hcoolant(1,i)=(cos(pi()/4)*Lwet(1,i))+(vfrac*Hchannel*(1-cos(pi()/4)));
     else
-        Hcoolant(1,i)=Lwet;
+        Hcoolant(1,i)=Lwet(1,i);
        
     end
     
@@ -226,4 +226,4 @@ for i=2:(time/div)+1
     Qzirconium(1,i)=B(7,1);
 end
 
-res=[Peval;Tfuel;Tclad;Tvap;TPT;TCT;mflow;alpha;Hcoolant;Lwet];
+res=[Tfuel;Tclad;Tvap;TPT;TCT;mflow;alpha;Hcoolant;Lwet;Peval];
